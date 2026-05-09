@@ -1,66 +1,151 @@
 # Container Security Analyzer 🛡️
 
-A professional, modular static analysis tool built with Python Flask to detect vulnerabilities, misconfigurations, and security anti-patterns in container configuration files.
+Una herramienta profesional y modular de análisis estático desarrollada con Python Flask para detectar vulnerabilidades, configuraciones inseguras y anti-patrones de seguridad en archivos de configuración de contenedores.
 
-**Important:** This application performs *static analysis only*. It does not execute containers or perform active penetration testing.
+> **Importante:** Esta aplicación realiza únicamente *análisis estático*. No ejecuta contenedores ni realiza pruebas activas de penetración.
 
-## Features
+---
 
-- **Multi-Format Support:** Analyzes `Dockerfile`, `docker-compose.yml`, Kubernetes manifests (`.yaml`), and `.env` files.
-- **Rule Engine:** Modular analyzers with specific rules for secrets detection, privilege escalation, network exposure, and supply-chain risks.
-- **Modern Dashboard:** Cyber-security themed dark UI with glassmorphism effects, drag-and-drop upload, and animated charts.
-- **Scoring System:** Calculates a security score (0-100) and assigns a grade (A-F) based on finding severity.
-- **Reporting:** Export detailed, self-contained HTML reports.
-- **Privacy:** In-memory history only (no database required).
+## Características
 
-## Architecture
+- **Soporte Multi-Formato:** Analiza archivos `Dockerfile`, `docker-compose.yml`, manifiestos de Kubernetes (`.yaml`) y archivos `.env`.
+- **Motor de Reglas:** Analizadores modulares con reglas específicas para detección de secretos, escalación de privilegios, exposición de red y riesgos de cadena de suministro.
+- **Dashboard Moderno:** Interfaz oscura con temática de ciberseguridad, efectos glassmorphism, carga mediante arrastrar y soltar y gráficos animados.
+- **Sistema de Puntuación:** Calcula un puntaje de seguridad (0-100) y asigna una calificación (A-F) basada en la severidad de los hallazgos.
+- **Reportes:** Exportación de reportes HTML detallados y autocontenidos.
+- **Privacidad:** Historial únicamente en memoria (no requiere base de datos).
+
+---
+
+## Arquitectura
 
 - **Backend:** Python 3.12, Flask, Werkzeug
 - **Frontend:** HTML5, Bootstrap 5, Vanilla JS, Chart.js, FontAwesome
-- **Deployment:** Ready for Azure App Service Linux (includes `Procfile`, `startup.sh`, and GitHub Actions workflow).
+- **Despliegue:** Preparado para Azure App Service Linux (incluye `Procfile`, `startup.sh` y workflow de GitHub Actions).
 
-## Installation
+---
 
-1. **Clone the repository** (or download the files).
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Environment Variables:**
-   Rename `.env.example` to `.env` and configure your settings.
+## Instalación
 
-## Usage
+1. **Clonar el repositorio** (o descargar los archivos).
 
-Run the application locally:
+2. **Crear un entorno virtual:**
+
+```bash
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+```
+
+3. **Instalar dependencias:**
+
+```bash
+pip install -r requirements.txt
+```
+
+4. **Variables de entorno:**
+
+Renombra `.env.example` a `.env` y configura tus ajustes.
+
+---
+
+## Uso
+
+Ejecutar la aplicación localmente:
+
 ```bash
 flask run
 ```
-Or with Gunicorn:
+
+O usando Gunicorn:
+
 ```bash
 gunicorn app:app --bind=0.0.0.0:8000
 ```
 
-Navigate to `http://127.0.0.1:5000` (or 8000) in your browser. Drag and drop your configuration files into the drop zone and click "Start Analysis".
+Luego navega a:
 
-## Rule Categories
+```text
+http://127.0.0.1:5000
+```
 
-- **Privilege Escalation:** Detects `privileged: true`, `USER root`, `hostPID`, etc.
-- **Network Security:** Detects `hostNetwork`, dangerous exposed ports (22, 2375, 3389).
-- **Secrets Management:** Regex-based detection for hardcoded API keys, tokens, and passwords in `ENV`, `ARG`, `.env` files, and ConfigMaps.
-- **Supply Chain:** Detects unpinned image tags (`latest`), unofficial base images, and unsafe remote script execution (`curl | bash`).
-- **Resource Constraints:** Flags missing memory/CPU limits.
+(o puerto 8000) desde tu navegador.
 
-## Deployment to Azure App Service
+Arrastra y suelta tus archivos de configuración en el área de carga y haz clic en **"Start Analysis"**.
 
-This repository includes a GitHub Actions workflow `.github/workflows/azure-deploy.yml`.
+---
 
-1. Create a Web App in Azure App Service (Linux, Python 3.12).
-2. Download the Publish Profile from the Azure Portal.
-3. In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
-4. Add a repository secret named `AZURE_WEBAPP_PUBLISH_PROFILE` and paste the publish profile XML content.
-5. Push to the `main` branch to trigger deployment.
+## Categorías de Reglas
+
+### Escalación de Privilegios
+
+Detecta:
+- `privileged: true`
+- `USER root`
+- `hostPID`
+- entre otros.
+
+### Seguridad de Red
+
+Detecta:
+- `hostNetwork`
+- puertos peligrosos expuestos (`22`, `2375`, `3389`).
+
+### Gestión de Secretos
+
+Detección basada en expresiones regulares para:
+- claves API hardcodeadas
+- tokens
+- contraseñas
+
+en:
+- `ENV`
+- `ARG`
+- archivos `.env`
+- ConfigMaps.
+
+### Cadena de Suministro
+
+Detecta:
+- etiquetas de imágenes sin fijar (`latest`)
+- imágenes base no oficiales
+- ejecución insegura de scripts remotos (`curl | bash`).
+
+### Restricciones de Recursos
+
+Marca:
+- ausencia de límites de memoria
+- ausencia de límites de CPU.
+
+---
+
+## Despliegue en Azure App Service
+
+Este repositorio incluye un workflow de GitHub Actions:
+
+```text
+.github/workflows/azure-deploy.yml
+```
+
+### Pasos
+
+1. Crear una Web App en Azure App Service:
+   - Linux
+   - Python 3.12
+
+2. Descargar el **Publish Profile** desde el portal de Azure.
+
+3. En tu repositorio de GitHub ir a:
+
+```text
+Settings > Secrets and variables > Actions
+```
+
+4. Agregar un secreto llamado:
+
+```text
+AZURE_WEBAPP_PUBLISH_PROFILE
+```
+
+y pegar el contenido XML del publish profile.
+
+5. Hacer push a la rama `main` para activar el despliegue automático.
