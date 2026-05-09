@@ -31,10 +31,10 @@ jobs:
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt -t .python_packages/lib/site-packages
         
     - name: Comprimir artefacto para el despliegue
-      run: zip -r release.zip ./* -x "venv/*" -x ".git/*" -x ".github/*"
+      run: zip -r release.zip ./* -x ".git/*" -x ".github/*"
 
     - name: Iniciar sesión en Azure
       uses: azure/login@v2
