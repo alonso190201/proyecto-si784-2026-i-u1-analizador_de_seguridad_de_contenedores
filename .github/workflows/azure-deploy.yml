@@ -52,6 +52,9 @@ jobs:
         echo "Creando Web App..."
         az webapp create --resource-group ${{ env.RESOURCE_GROUP }} --plan analizador-plan --name ${{ env.AZURE_WEBAPP_NAME }} --runtime "PYTHON|3.12"
         
+        echo "Configurando variables de entorno para que Azure construya la app..."
+        az webapp config appsettings set --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true ENABLE_ORYX_BUILD=true
+        
         echo "Configurando comando de inicio..."
         az webapp config set --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --startup-file "gunicorn app:app --bind=0.0.0.0:8000 --workers=2 --timeout=120"
         
