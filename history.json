@@ -1,0 +1,166 @@
+[
+  {
+    "id": "f5adb10b-527a-47da-a47a-320868cc5dac",
+    "filename": "bad-compose.yml",
+    "file_type": "compose",
+    "findings": [
+      {
+        "rule_id": "COMPOSE_001",
+        "severity": "critical",
+        "title": "[web] Contenedor privilegiado",
+        "description": "Establecer privileged:true elimina el aislamiento del contenedor y otorga acceso al kernel del host.",
+        "recommendation": "Elimina privileged:true. Usa capacidades cap_add m\u00ednimas requeridas en su lugar.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege"
+      },
+      {
+        "rule_id": "COMPOSE_002",
+        "severity": "critical",
+        "title": "[web] Modo de red del host",
+        "description": "El modo network_mode:host omite el aislamiento de red de Docker.",
+        "recommendation": "Define redes de Docker dedicadas y exp\u00f3n solo los puertos necesarios.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "network"
+      },
+      {
+        "rule_id": "COMPOSE_004",
+        "severity": "high",
+        "title": "[web] Puerto peligroso 22 (SSH) expuesto",
+        "description": "El puerto 22 (SSH) est\u00e1 mapeado al host.",
+        "recommendation": "Restr\u00ednjalo a 127.0.0.1:22:22 o elimine el mapeo.",
+        "line_number": 0,
+        "line_content": "22:22",
+        "category": "network"
+      },
+      {
+        "rule_id": "COMPOSE_005",
+        "severity": "medium",
+        "title": "[web] Puerto vinculado a todas las interfaces",
+        "description": "El mapeo del puerto '22:22' es accesible desde cualquier interfaz de red.",
+        "recommendation": "Restr\u00ednjalo a 127.0.0.1:<host>:<contenedor> para servicios internos.",
+        "line_number": 0,
+        "line_content": "22:22",
+        "category": "network"
+      },
+      {
+        "rule_id": "COMPOSE_005",
+        "severity": "medium",
+        "title": "[web] Puerto vinculado a todas las interfaces",
+        "description": "El mapeo del puerto '0.0.0.0:80:80' es accesible desde cualquier interfaz de red.",
+        "recommendation": "Restr\u00ednjalo a 127.0.0.1:<host>:<contenedor> para servicios internos.",
+        "line_number": 0,
+        "line_content": "0.0.0.0:80:80",
+        "category": "network"
+      },
+      {
+        "rule_id": "COMPOSE_006",
+        "severity": "critical",
+        "title": "[web] Ruta sensible del host montada: /var/run/docker.sock",
+        "description": "Montar '/var/run/docker.sock' otorga al contenedor acceso a recursos cr\u00edticos del host. El montaje del socket Docker = control total del demonio Docker.",
+        "recommendation": "Usa vol\u00famenes con nombre de Docker o configuraciones/secretos de Docker en su lugar.",
+        "line_number": 0,
+        "line_content": "/var/run/docker.sock:/var/run/docker.sock",
+        "category": "filesystem"
+      },
+      {
+        "rule_id": "COMPOSE_006",
+        "severity": "high",
+        "title": "[web] Ruta sensible del host montada: /etc",
+        "description": "Montar '/etc' otorga al contenedor acceso a recursos cr\u00edticos del host.",
+        "recommendation": "Usa vol\u00famenes con nombre de Docker o configuraciones/secretos de Docker en su lugar.",
+        "line_number": 0,
+        "line_content": "/etc:/host-etc",
+        "category": "filesystem"
+      },
+      {
+        "rule_id": "COMPOSE_007",
+        "severity": "medium",
+        "title": "[web] Sin l\u00edmite de memoria",
+        "description": "Sin l\u00edmites de memoria, el contenedor puede agotar la memoria del host (DoS).",
+        "recommendation": "Configura deploy.resources.limits.memory (ej. '512m').",
+        "line_number": 0,
+        "line_content": "",
+        "category": "resources"
+      },
+      {
+        "rule_id": "COMPOSE_008",
+        "severity": "low",
+        "title": "[web] Sin l\u00edmite de CPU",
+        "description": "Sin l\u00edmites de CPU, el contenedor puede monopolizar todos los n\u00facleos.",
+        "recommendation": "Configura deploy.resources.limits.cpus (ej. '0.5').",
+        "line_number": 0,
+        "line_content": "",
+        "category": "resources"
+      },
+      {
+        "rule_id": "COMPOSE_012",
+        "severity": "medium",
+        "title": "[web] Etiqueta de imagen sin fijar",
+        "description": "La imagen 'nginx' no tiene una versi\u00f3n fija.",
+        "recommendation": "Fija a una versi\u00f3n espec\u00edfica, ej: 'nginx:1.27.0-alpine'.",
+        "line_number": 0,
+        "line_content": "nginx",
+        "category": "image"
+      }
+    ],
+    "summary": {
+      "total": 10,
+      "counts": {
+        "critical": 3,
+        "high": 2,
+        "medium": 4,
+        "low": 1,
+        "info": 0
+      },
+      "categories": {
+        "privilege": 1,
+        "network": 4,
+        "filesystem": 2,
+        "resources": 2,
+        "image": 1
+      },
+      "score": 0,
+      "grade": "F",
+      "grade_color": "#ef4444"
+    },
+    "lines_analyzed": 14,
+    "timestamp": "2026-05-09T03:26:18.673055+00:00"
+  },
+  {
+    "id": "8f2ca85d-8e57-41ba-9f88-7291d2fe411a",
+    "filename": ".env",
+    "file_type": "env",
+    "findings": [
+      {
+        "rule_id": "ENV_001",
+        "severity": "critical",
+        "title": "Secreto expuesto: SECRET_KEY",
+        "description": "La variable de entorno 'SECRET_KEY' parece contener un/una secreto. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
+        "recommendation": "Agrega el archivo .env a .gitignore inmediatamente. Usa un administrador de secretos (Azure Key Vault, AWS Secrets Manager) en lugar de un .env en la nube.",
+        "line_number": 8,
+        "line_content": "SECRET_KEY=********",
+        "category": "secrets"
+      }
+    ],
+    "summary": {
+      "total": 1,
+      "counts": {
+        "critical": 1,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      },
+      "categories": {
+        "secrets": 1
+      },
+      "score": 75,
+      "grade": "B",
+      "grade_color": "#84cc16"
+    },
+    "lines_analyzed": 12,
+    "timestamp": "2026-05-09T03:26:36.087474+00:00"
+  }
+]

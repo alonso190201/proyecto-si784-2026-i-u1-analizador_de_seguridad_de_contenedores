@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <!-- Hero Stats Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card glass-card">
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-file-shield"></i>
+                </div>
+                <div class="stat-details">
+                    <h3 id="statTotalScans">0</h3>
+                    <span>Escaneos Totales</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card glass-card">
+                <div class="stat-icon bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="stat-details">
+                    <h3 id="statCritical">0</h3>
+                    <span>Riesgos Críticos</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card glass-card">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <div class="stat-details">
+                    <h3 id="statHigh">0</h3>
+                    <span>Riesgos Altos</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card glass-card">
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="fa-solid fa-shield-check"></i>
+                </div>
+                <div class="stat-details">
+                    <h3 id="statAvgScore">--</h3>
+                    <span>Puntuación Media</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Upload Column -->
+        <div class="col-lg-5">
+            <div class="glass-card p-4 h-100 d-flex flex-column">
+                <h5 class="card-title mb-4"><i class="fa-solid fa-cloud-arrow-up text-cyan me-2"></i> Subir Configuraciones</h5>
+                <p class="text-muted small mb-4">Sube archivos Dockerfile, docker-compose, Kubernetes YAML o .env para un análisis estático de seguridad. Ningún contenedor será ejecutado.</p>
+                
+                <div id="dropZone" class="upload-zone flex-grow-1 d-flex flex-column justify-content-center align-items-center">
+                    <i class="fa-solid fa-file-arrow-up fa-3x mb-3 text-cyan drop-icon"></i>
+                    <h4>Arrastra y Suelta Archivos Aquí</h4>
+                    <p class="text-muted small">o</p>
+                    <button class="btn btn-cyan px-4" onclick="document.getElementById('fileInput').click()">
+                        Explorar Archivos
+                    </button>
+                    <input type="file" id="fileInput" multiple class="d-none" accept=".yml,.yaml,.env,Dockerfile,.txt,.cfg,.conf,.json,.toml">
+                </div>
+                
+                <div id="uploadQueue" class="mt-3">
+                    <!-- Queued files appear here -->
+                </div>
+                
+                <div class="mt-4 text-end">
+                    <button id="analyzeBtn" class="btn btn-primary px-5 w-100" disabled>
+                        <i class="fa-solid fa-radar fa-spin me-2 d-none" id="analyzeSpinner"></i>
+                        <span>Iniciar Análisis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Column -->
+        <div class="col-lg-7">
+            <div class="glass-card p-4 h-100 d-flex flex-column" id="resultsContainer">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0"><i class="fa-solid fa-list-check text-cyan me-2"></i> Resultados del Análisis</h5>
+                    <button id="exportBtn" class="btn btn-sm btn-outline-success d-none">
+                        <i class="fa-solid fa-file-export me-1"></i> Exportar Reporte
+                    </button>
+                </div>
+                
+                <div id="emptyState" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center text-muted">
+                    <i class="fa-solid fa-microscope fa-4x mb-3 opacity-25"></i>
+                    <h5>Esperando telemetría...</h5>
+                    <p class="small">Sube archivos para ver los hallazgos de seguridad y recomendaciones.</p>
+                </div>
+
+                <div id="loadingState" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center d-none">
+                    <div class="cyber-loader mb-4"></div>
+                    <h5>Escaneando Configuraciones...</h5>
+                    <p class="text-muted small analyzer-status">Ejecutando motor heurístico</p>
+                </div>
+
+                <div id="resultsContent" class="flex-grow-1 d-none overflow-auto">
+                    <!-- Chart and Score -->
+                    <div class="row mb-4 align-items-center">
+                        <div class="col-md-5 text-center">
+                            <div class="score-circle mx-auto mb-2" id="scoreCircle">
+                                <span class="score-value" id="scoreValue">100</span>
+                            </div>
+                            <span class="badge bg-secondary" id="gradeBadge">Grado: A</span>
+                        </div>
+                        <div class="col-md-7">
+                            <canvas id="severityChart" height="150"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- File Tabs (if multiple) -->
+                    <ul class="nav nav-pills mb-3 custom-tabs" id="fileTabs" role="tablist">
+                        <!-- Tabs injected via JS -->
+                    </ul>
+                    
+                    <!-- Findings -->
+                    <div class="tab-content" id="findingsTabContent">
+                        <!-- Findings injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analyzer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

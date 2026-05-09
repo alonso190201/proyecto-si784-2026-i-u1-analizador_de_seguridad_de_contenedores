@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  web:
+    image: nginx
+    privileged: true
+    network_mode: host
+    ports:
+      - "22:22"
+      - "0.0.0.0:80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc:/host-etc
+    environment:
+      - DB_PASSWORD=supersecretpassword123
