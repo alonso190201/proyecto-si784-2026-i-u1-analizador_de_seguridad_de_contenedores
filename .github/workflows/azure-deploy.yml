@@ -1,4 +1,4 @@
-name: Desplegar en Azure App Service
+name: Deploy to Azure App Service
 
 on:
   push:
@@ -7,67 +7,47 @@ on:
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: "3.12"
   AZURE_WEBAPP_NAME: analizador-contenedores-upc
-  RESOURCE_GROUP: analizador-sec-rg
 
 jobs:
-  build-and-deploy:
+  build-test-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Configurar Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Crear e iniciar entorno virtual
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-      
-    - name: Instalar dependencias
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt -t .python_packages/lib/site-packages
-        
-    - name: Comprimir artefacto para el despliegue
-      run: zip -r release.zip ./* -x ".git/*" -x ".github/*"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Iniciar sesión en Azure
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      - name: Run tests
+        run: python -m pytest
 
-    - name: Crear Infraestructura y Desplegar
-      run: |
-        echo "Creando Grupo de Recursos..."
-        az group create --name ${{ env.RESOURCE_GROUP }} --location eastus
-        
-        echo "Creando App Service Plan..."
-        az appservice plan create --name analizador-plan --resource-group ${{ env.RESOURCE_GROUP }} --sku B1 --is-linux
-        
-        echo "Creando Web App..."
-        az webapp create --resource-group ${{ env.RESOURCE_GROUP }} --plan analizador-plan --name ${{ env.AZURE_WEBAPP_NAME }} --runtime "PYTHON|3.12"
-        
-        echo "Configurando variables de entorno para que Azure construya la app..."
-        az webapp config appsettings set --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true ENABLE_ORYX_BUILD=true
-        
-        echo "Configurando comando de inicio..."
-        az webapp config set --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --startup-file "gunicorn app:app --bind=0.0.0.0:8000 --workers=2 --timeout=120"
-        
-        echo "Desplegando código..."
-        az webapp deploy --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --src-path release.zip
+      - name: Build deployment artifact
+        run: |
+          zip -r release.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "venv/*" \
+            -x "__pycache__/*" \
+            -x ".pytest_cache/*" \
+            -x "history.json"
 
-    - name: Mostrar Enlace al Sistema
-      run: |
-        echo "========================================================"
-        echo "✅ DESPLIEGUE COMPLETADO CON ÉXITO ✅"
-        echo "========================================================"
-        echo "🌍 Enlace al sistema desplegado: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
-        echo "========================================================"
-        
-        echo "### ✅ Despliegue Exitoso" >> $GITHUB_STEP_SUMMARY
-        echo "**Enlace al sistema:** [https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net](https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net)" >> $GITHUB_STEP_SUMMARY
+      - name: Deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: release.zip
+
+      - name: Summary
+        run: |
+          echo "### Deployment completed" >> $GITHUB_STEP_SUMMARY
+          echo "Application: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net" >> $GITHUB_STEP_SUMMARY

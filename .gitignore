@@ -45,3 +45,7 @@ venv.bak/
 
 # Temporary uploads (if any)
 uploads/
+
+# Local runtime data
+history.json
+.pytest_tmp/

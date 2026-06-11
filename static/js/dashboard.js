@@ -1,10 +1,8 @@
 /**
- * dashboard.js - Handles charts, top-level stats, and history polling.
+ * dashboard.js - Charts, aggregate counters, and history modal.
  */
 
 let severityChartObj = null;
-
-// Global stats
 let totalScans = 0;
 let totalCritical = 0;
 let totalHigh = 0;
@@ -13,26 +11,53 @@ let scoreCount = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     initChart();
-    
-    // Load history on modal open
+    loadInitialStats();
+
     const historyModal = document.getElementById('historyModal');
-    if (historyModal) {
-        historyModal.addEventListener('show.bs.tab', loadHistory); // if tabbed
-        historyModal.addEventListener('show.bs.modal', loadHistory); // if modal
-    }
+    if (historyModal) historyModal.addEventListener('show.bs.modal', loadHistory);
 
     const clearBtn = document.getElementById('clearHistoryBtn');
     if (clearBtn) {
         clearBtn.addEventListener('click', async () => {
             try {
-                await fetch('/api/history', { method: 'DELETE' });
+                const response = await fetch('/api/history', {
+                    method: 'DELETE',
+                    headers: window.getApiHeaders()
+                });
+                if (!response.ok) throw new Error('No se pudo borrar el historial');
                 document.getElementById('historyContainer').innerHTML = '<div class="p-4 text-center text-muted">Historial borrado.</div>';
-            } catch (e) {
-                console.error(e);
+                
+                // Reset local statistics counters and UI
+                totalScans = 0;
+                totalCritical = 0;
+                totalHigh = 0;
+                sumScore = 0;
+                scoreCount = 0;
+                document.getElementById('statTotalScans').innerText = 0;
+                document.getElementById('statCritical').innerText = 0;
+                document.getElementById('statHigh').innerText = 0;
+                document.getElementById('statAvgScore').innerText = '--';
+
+                window.showToast('Historial borrado.', 'success');
+            } catch (error) {
+                window.showToast(error.message, 'danger');
             }
         });
     }
 });
+
+async function loadInitialStats() {
+    try {
+        const response = await fetch('/api/history', { headers: window.getApiHeaders() });
+        if (!response.ok) throw new Error('No se pudo cargar las estadísticas iniciales');
+        const history = await response.json();
+        if (history && history.length > 0) {
+            window.updateDashboardStats(history);
+        }
+    } catch (e) {
+        console.error("Error al cargar estadísticas iniciales:", e);
+    }
+}
 
 function initChart() {
     const ctx = document.getElementById('severityChart');
@@ -41,58 +66,81 @@ function initChart() {
     severityChartObj = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Crítico', 'Alto', 'Medio', 'Bajo', 'Info'],
+            labels: ['Critico', 'Alto', 'Medio', 'Bajo', 'Info'],
             datasets: [{
                 data: [0, 0, 0, 0, 0],
-                backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#6b7280'],
+                backgroundColor: ['#dc2626', '#ea580c', '#ca8a04', '#2563eb', '#64748b'],
                 borderWidth: 0,
-                cutout: '75%'
+                cutout: '72%'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 12 } }
+                legend: {
+                    position: 'right',
+                    labels: { color: '#334155', boxWidth: 12, font: { family: 'Inter' } }
+                }
             }
         }
     });
 }
 
 window.updateCharts = function(summary) {
-    // Update Score Circle
     const scoreVal = document.getElementById('scoreValue');
     const badge = document.getElementById('gradeBadge');
-    
+    const explanation = document.getElementById('scoreExplanation');
+
     scoreVal.innerText = summary.score;
-    badge.innerText = `Grado: ${summary.grade}`;
+    scoreVal.style.color = summary.grade_color;
+    badge.innerText = `Grado ${summary.grade}`;
     badge.style.backgroundColor = summary.grade_color;
+    explanation.innerText = summary.score_explanation || '';
 
-    let color = summary.grade_color;
-    document.getElementById('scoreCircle').style.borderColor = color;
-    scoreVal.style.color = color;
-
-    // Update Chart
     if (severityChartObj) {
-        const c = summary.counts;
+        const counts = summary.counts || {};
         severityChartObj.data.datasets[0].data = [
-            c.critical || 0,
-            c.high || 0,
-            c.medium || 0,
-            c.low || 0,
-            c.info || 0
+            counts.critical || 0,
+            counts.high || 0,
+            counts.medium || 0,
+            counts.low || 0,
+            counts.info || 0
         ];
         severityChartObj.update();
     }
 };
 
+window.clearCharts = function() {
+    const scoreVal = document.getElementById('scoreValue');
+    const badge = document.getElementById('gradeBadge');
+    const explanation = document.getElementById('scoreExplanation');
+
+    if (scoreVal) {
+        scoreVal.innerText = '--';
+        scoreVal.style.color = 'var(--muted)';
+    }
+    if (badge) {
+        badge.innerText = 'ERROR';
+        badge.style.backgroundColor = 'var(--red)';
+    }
+    if (explanation) {
+        explanation.innerText = 'El análisis de este archivo falló o no contiene resultados válidos.';
+    }
+
+    if (severityChartObj) {
+        severityChartObj.data.datasets[0].data = [0, 0, 0, 0, 0];
+        severityChartObj.update();
+    }
+};
+
 window.updateDashboardStats = function(resultsArray) {
-    resultsArray.forEach(res => {
-        if (!res.error && res.summary) {
+    resultsArray.forEach(result => {
+        if (!result.error && result.summary) {
             totalScans++;
-            totalCritical += res.summary.counts.critical || 0;
-            totalHigh += res.summary.counts.high || 0;
-            sumScore += res.summary.score || 0;
+            totalCritical += result.summary.counts.critical || 0;
+            totalHigh += result.summary.counts.high || 0;
+            sumScore += result.summary.score || 0;
             scoreCount++;
         }
     });
@@ -100,104 +148,80 @@ window.updateDashboardStats = function(resultsArray) {
     document.getElementById('statTotalScans').innerText = totalScans;
     document.getElementById('statCritical').innerText = totalCritical;
     document.getElementById('statHigh').innerText = totalHigh;
-    
-    if (scoreCount > 0) {
-        const avg = Math.round(sumScore / scoreCount);
-        document.getElementById('statAvgScore').innerText = avg;
-    }
+    document.getElementById('statAvgScore').innerText = scoreCount > 0 ? Math.round(sumScore / scoreCount) : '--';
 };
 
 async function loadHistory() {
     const container = document.getElementById('historyContainer');
-    container.innerHTML = '<div class="p-4 text-center"><i class="fa-solid fa-spinner fa-spin text-cyan"></i> Cargando...</div>';
-    
+    container.innerHTML = '<div class="p-4 text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</div>';
+
     try {
-        const res = await fetch('/api/history');
-        if (!res.ok) throw new Error("Failed to load");
-        const history = await res.json();
-        
+        const response = await fetch('/api/history', { headers: window.getApiHeaders() });
+        const history = await response.json();
+        if (!response.ok) throw new Error(history.error || 'No se pudo cargar el historial');
+
         if (history.length === 0) {
             container.innerHTML = '<div class="p-4 text-center text-muted">No hay historial disponible.</div>';
             return;
         }
 
-        let html = '';
-        history.forEach(item => {
-            const d = new Date(item.timestamp);
-            const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const dateStr = d.toLocaleDateString();
-            
-            let badge = '';
-            if (item.summary) {
-                badge = `<span class="badge" style="background:${item.summary.grade_color}">${item.summary.grade} - ${item.summary.score}/100</span>`;
-            }
-
-            html += `
-                <div class="list-group-item bg-transparent text-light border-secondary">
-                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                        <h6 class="mb-0 text-truncate" style="max-width: 60%;"><i class="fa-regular fa-file me-2"></i>${item.filename}</h6>
-                        <small class="text-muted">${dateStr} ${timeStr}</small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-end">
-                        <div>
-                            <small class="text-muted text-uppercase d-block mb-1">${item.file_type}</small>
-                            ${badge}
-                        </div>
-                        <button class="btn btn-sm btn-outline-cyan view-history-btn" data-id="${item.id}">
-                            <i class="fa-solid fa-eye"></i> Ver
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-
-        // Add event listeners for the "View" buttons
-        document.querySelectorAll('.view-history-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.currentTarget.getAttribute('data-id');
-                if (id) await loadAndRenderHistoryEntry(id);
-            });
-        });
-
-    } catch (e) {
-        console.error(e);
-        container.innerHTML = '<div class="p-4 text-center text-danger">Error al cargar el historial.</div>';
+        container.replaceChildren();
+        history.forEach(item => container.appendChild(buildHistoryItem(item)));
+    } catch (error) {
+        container.innerHTML = `<div class="p-4 text-center text-danger">${escapeHtml(error.message)}</div>`;
     }
+}
+
+function buildHistoryItem(item) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'history-item';
+
+    const date = item.timestamp ? new Date(item.timestamp) : null;
+    const dateText = date ? `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '';
+    const grade = item.summary ? `${item.summary.grade} - ${item.summary.score}/100` : 'Sin score';
+    const gradeColor = item.summary ? item.summary.grade_color : '#64748b';
+
+    wrapper.innerHTML = `
+        <div class="history-title">
+            <strong><i class="fa-regular fa-file me-2"></i>${escapeHtml(item.filename)}</strong>
+            <small class="text-muted">${escapeHtml(dateText)}</small>
+        </div>
+        <div class="d-flex justify-content-between align-items-center gap-3">
+            <div>
+                <small class="text-muted text-uppercase d-block">${escapeHtml(item.file_type || 'unknown')}</small>
+                <span class="badge" style="background:${gradeColor}">${escapeHtml(grade)}</span>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" type="button">
+                <i class="fa-solid fa-eye"></i>
+                Ver
+            </button>
+        </div>
+    `;
+
+    wrapper.querySelector('button').addEventListener('click', () => loadAndRenderHistoryEntry(item.id));
+    return wrapper;
 }
 
 async function loadAndRenderHistoryEntry(id) {
     try {
-        // Close modal
         const modalEl = document.getElementById('historyModal');
         const modalIns = bootstrap.Modal.getInstance(modalEl);
         if (modalIns) modalIns.hide();
 
-        // Show loading state on main dashboard
         document.getElementById('emptyState').classList.add('d-none');
         document.getElementById('resultsContent').classList.add('d-none');
         document.getElementById('loadingState').classList.remove('d-none');
-        document.querySelector('.analyzer-status').innerText = "Cargando análisis desde historial...";
+        document.querySelector('.analyzer-status').innerText = 'Cargando historial';
 
-        // Fetch data
-        const res = await fetch(`/api/history/${id}`);
-        if (!res.ok) throw new Error("No se pudo cargar el análisis");
-        const entryData = await res.json();
+        const response = await fetch(`/api/history/${id}`, { headers: window.getApiHeaders() });
+        const entryData = await response.json();
+        if (!response.ok) throw new Error(entryData.error || 'No se pudo cargar el analisis');
 
-        // Pass to analyzer.js rendering pipeline as an array (since it expects multiple files)
-        window.currentAnalysisData = [entryData]; // Ensure export works
-        
-        // Hide loading and use renderResults (assumes renderResults is global)
-        if (typeof renderResults === 'function') {
-            renderResults([entryData]);
-        } else {
-            console.error("renderResults function not found in scope");
-        }
-
-    } catch (e) {
-        console.error(e);
-        alert(`Error al cargar el análisis: ${e.message}`);
-        
+        window.currentAnalysisData = [entryData];
+        renderResults([entryData]);
+    } catch (error) {
+        console.error(error);
+        window.showToast(`Error: ${error.message}`, 'danger');
         document.getElementById('loadingState').classList.add('d-none');
         document.getElementById('emptyState').classList.remove('d-none');
     }

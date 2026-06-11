@@ -32,13 +32,13 @@ class DockerfileAnalyzer(BaseAnalyzer):
 
     def analyze(self, content: str, filename: str = "") -> List[Finding]:
         findings: List[Finding] = []
-        lines = self.get_lines(content)
+        lines = self._logical_lines(content)
 
         has_healthcheck = False
         has_user_instruction = False
         uses_root = False
 
-        for idx, line in enumerate(lines, start=1):
+        for idx, line in lines:
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
                 continue
@@ -107,10 +107,10 @@ class DockerfileAnalyzer(BaseAnalyzer):
 
             # --- Use of 'latest' tag ---
             if re.match(r"^FROM\s+", stripped, re.IGNORECASE):
-                if re.search(r":latest\b", stripped, re.IGNORECASE) or (
-                    ":" not in stripped.split()[-1] and "@" not in stripped
-                    and "AS" not in stripped.upper()
-                ):
+                image = self._extract_from_image(stripped)
+                if image and (image.endswith(":latest") or (
+                    ":" not in image.split("/")[-1] and "@" not in image
+                )):
                     findings.append(self._make_finding(
                         "005", MEDIUM,
                         "La imagen usa 'latest' o un tag no fijado",
@@ -172,6 +172,30 @@ class DockerfileAnalyzer(BaseAnalyzer):
                     line_number=idx, line_content=stripped, category="supply-chain",
                 ))
 
+            # --- Package manager upgrade in builds ---
+            if re.match(r"^RUN\b", stripped, re.IGNORECASE) and re.search(
+                r"\b(apt-get|apt|apk|yum|dnf)\s+.*\bupgrade\b", stripped, re.IGNORECASE
+            ):
+                findings.append(self._make_finding(
+                    "013", MEDIUM,
+                    "Actualizacion completa de paquetes durante el build",
+                    "Ejecutar upgrades generales hace que la imagen sea menos reproducible y puede introducir cambios no controlados.",
+                    "Usa una imagen base actualizada y fija versiones de paquetes cuando el build requiera instalarlos.",
+                    line_number=idx, line_content=stripped, category="supply-chain",
+                ))
+
+            # --- Package cache not removed ---
+            if re.match(r"^RUN\b", stripped, re.IGNORECASE) and re.search(
+                r"\bapt-get\s+install\b", stripped, re.IGNORECASE
+            ) and "/var/lib/apt/lists" not in stripped:
+                findings.append(self._make_finding(
+                    "014", LOW,
+                    "Cache de paquetes APT no limpiada",
+                    "Mantener el cache de APT aumenta el tamano de la imagen y puede dejar metadatos innecesarios.",
+                    "Agrega 'rm -rf /var/lib/apt/lists/*' en la misma instruccion RUN.",
+                    line_number=idx, line_content=stripped, category="image",
+                ))
+
             # --- Secrets via RUN commands ---
             for pattern in self.SECRET_PATTERNS:
                 if re.match(r"^RUN\b", stripped, re.IGNORECASE) and re.search(pattern, stripped):
@@ -213,3 +237,33 @@ class DockerfileAnalyzer(BaseAnalyzer):
             ))
 
         return findings
+
+    @staticmethod
+    def _extract_from_image(line: str) -> str:
+        """Return the image token from a FROM instruction, ignoring AS aliases."""
+        parts = line.split()
+        if len(parts) < 2:
+            return ""
+        return parts[1]
+
+    @staticmethod
+    def _logical_lines(content: str) -> List[tuple[int, str]]:
+        """Join Dockerfile lines continued with a backslash, preserving start line."""
+        logical: List[tuple[int, str]] = []
+        buffer = ""
+        start_line = 1
+
+        for idx, raw in enumerate(content.splitlines(), start=1):
+            line = raw.rstrip()
+            if not buffer:
+                start_line = idx
+            if line.endswith("\\"):
+                buffer += line[:-1] + " "
+                continue
+            buffer += line
+            logical.append((start_line, buffer))
+            buffer = ""
+
+        if buffer:
+            logical.append((start_line, buffer))
+        return logical

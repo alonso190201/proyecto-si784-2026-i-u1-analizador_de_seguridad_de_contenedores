@@ -54,10 +54,14 @@ def detect_file_type(filename: str, content: str) -> str:
 def _detect_yaml_type(content: str) -> str:
     """Inspect YAML content to distinguish compose from kubernetes."""
     try:
-        data = yaml.safe_load(content) or {}
+        docs = [doc for doc in yaml.safe_load_all(content) if doc]
     except yaml.YAMLError:
         return "unknown"
 
+    if not docs:
+        return "unknown"
+
+    data = docs[0]
     if not isinstance(data, dict):
         return "unknown"
 
@@ -66,7 +70,7 @@ def _detect_yaml_type(content: str) -> str:
         return "compose"
 
     # Kubernetes has 'apiVersion' and 'kind'
-    if "apiVersion" in data and "kind" in data:
+    if any(isinstance(doc, dict) and "apiVersion" in doc and "kind" in doc for doc in docs):
         return "kubernetes"
 
     return "unknown"

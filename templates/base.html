@@ -1,89 +1,123 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="dark">
+<html lang="es" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analizador de Seguridad de Contenedores | Dashboard SOC</title>
-    <!-- Bootstrap 5 -->
+    <title>ASC | Analizador de Contenedores</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="sidebar-brand">
-                <i class="fa-solid fa-shield-halved text-cyan"></i>
-                <span>Plataforma ASC</span>
-            </div>
-            <ul class="nav flex-column mt-4">
-                <li class="nav-item">
-                    <a class="nav-link active" href="/">
-                        <i class="fa-solid fa-chart-pie"></i> Panel de Control
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#historyModal">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Historial
-                    </a>
-                </li>
-            </ul>
-            <div class="sidebar-footer">
-                <div class="status-indicator">
-                    <span class="pulse"></span> Sistema en Línea
-                </div>
-            </div>
-        </nav>
+    <div class="app-shell">
+        <aside class="rail">
+            <a class="brand" href="/">
+                <span class="brand-mark"><i class="fa-solid fa-shield-halved"></i></span>
+                <span>
+                    <strong>ASC</strong>
+                    <small>Container Security</small>
+                </span>
+            </a>
 
-        <!-- Main Content -->
-        <main class="main-content">
+            <nav class="rail-nav" aria-label="Navegacion principal">
+                <a class="rail-link active" href="/">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <span>Panel</span>
+                </a>
+                <button class="rail-link rail-button" type="button" data-bs-toggle="modal" data-bs-target="#historyModal">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Historial</span>
+                </button>
+            </nav>
+
+            <div class="rail-footer">
+                <span class="status-dot"></span>
+                <span>Listo</span>
+            </div>
+        </aside>
+
+        <main class="workspace">
             <header class="topbar">
-                <div class="page-title">
-                    <h4 class="mb-0">Motor de Análisis de Seguridad</h4>
+                <div>
+                    <p class="eyebrow">Static analysis</p>
+                    <h1>Analizador de Seguridad de Contenedores</h1>
                 </div>
                 <div class="topbar-actions">
-                    <span class="badge bg-secondary me-3">Modo de Análisis Estático</span>
-                    <button class="btn btn-outline-cyan btn-sm" onclick="window.open('https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-i-u1-analizador_de_seguridad_de_contenedores','_blank')">
-                        <i class="fa-brands fa-github"></i> Repositorio
-                    </button>
+                    <div class="token-control">
+                        <i class="fa-solid fa-key"></i>
+                        <input id="apiTokenInput" type="password" placeholder="Token API opcional" autocomplete="off">
+                    </div>
+                    <a class="icon-button" href="https://github.com/alonso190201/proyecto-si784-2026-i-u1-analizador_de_seguridad_de_contenedores" target="_blank" rel="noreferrer" title="Repositorio">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
                 </div>
             </header>
 
-            <div class="content-wrapper">
+            <section class="content-area">
                 {% block content %}{% endblock %}
-            </div>
+            </section>
         </main>
     </div>
 
-    <!-- History Modal -->
     <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content glass-modal">
-                <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title"><i class="fa-solid fa-clock-rotate-left text-cyan"></i> Historial de Análisis</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow mb-1">Analisis recientes</p>
+                        <h5 class="modal-title">Historial local</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body p-0">
-                    <div id="historyContainer" class="list-group list-group-flush">
-                        <!-- History items populated via JS -->
-                    </div>
+                    <div id="historyContainer" class="history-list"></div>
                 </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-sm btn-outline-danger" id="clearHistoryBtn">Borrar Historial</button>
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="clearHistoryBtn">
+                        <i class="fa-solid fa-trash-can"></i>
+                        Borrar
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="appToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="appToastBody"></div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        window.getApiHeaders = function(extra) {
+            const headers = Object.assign({}, extra || {});
+            const token = localStorage.getItem('asc_api_token') || '';
+            if (token) headers['X-API-Token'] = token;
+            return headers;
+        };
+        window.showToast = function(message, tone) {
+            const toastEl = document.getElementById('appToast');
+            const body = document.getElementById('appToastBody');
+            body.textContent = message;
+            toastEl.className = `toast align-items-center border-0 text-bg-${tone || 'dark'}`;
+            bootstrap.Toast.getOrCreateInstance(toastEl).show();
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const tokenInput = document.getElementById('apiTokenInput');
+            tokenInput.value = localStorage.getItem('asc_api_token') || '';
+            tokenInput.addEventListener('change', () => {
+                localStorage.setItem('asc_api_token', tokenInput.value.trim());
+                window.showToast('Token actualizado.', 'success');
+            });
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

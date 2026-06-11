@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      # Configuración de hardening correcta
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          # Imagen con versión fija (no latest)
+          image: nginx:1.25.1
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          # Sin configurar límites de recursos (Memoria -7 puntos, CPU -2 puntos)
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"

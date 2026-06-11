@@ -1,166 +1,617 @@
 [
   {
-    "id": "f5adb10b-527a-47da-a47a-320868cc5dac",
-    "filename": "bad-compose.yml",
-    "file_type": "compose",
+    "id": "774623e9-48ab-4c71-b092-2cc781bdb257",
+    "filename": "Dockerfile",
+    "file_type": "dockerfile",
     "findings": [
       {
-        "rule_id": "COMPOSE_001",
-        "severity": "critical",
-        "title": "[web] Contenedor privilegiado",
-        "description": "Establecer privileged:true elimina el aislamiento del contenedor y otorga acceso al kernel del host.",
-        "recommendation": "Elimina privileged:true. Usa capacidades cap_add m\u00ednimas requeridas en su lugar.",
-        "line_number": 0,
-        "line_content": "",
-        "category": "privilege"
-      },
-      {
-        "rule_id": "COMPOSE_002",
-        "severity": "critical",
-        "title": "[web] Modo de red del host",
-        "description": "El modo network_mode:host omite el aislamiento de red de Docker.",
-        "recommendation": "Define redes de Docker dedicadas y exp\u00f3n solo los puertos necesarios.",
-        "line_number": 0,
-        "line_content": "",
-        "category": "network"
-      },
-      {
-        "rule_id": "COMPOSE_004",
-        "severity": "high",
-        "title": "[web] Puerto peligroso 22 (SSH) expuesto",
-        "description": "El puerto 22 (SSH) est\u00e1 mapeado al host.",
-        "recommendation": "Restr\u00ednjalo a 127.0.0.1:22:22 o elimine el mapeo.",
-        "line_number": 0,
-        "line_content": "22:22",
-        "category": "network"
-      },
-      {
-        "rule_id": "COMPOSE_005",
+        "rule_id": "DOCKERFILE_005",
         "severity": "medium",
-        "title": "[web] Puerto vinculado a todas las interfaces",
-        "description": "El mapeo del puerto '22:22' es accesible desde cualquier interfaz de red.",
-        "recommendation": "Restr\u00ednjalo a 127.0.0.1:<host>:<contenedor> para servicios internos.",
-        "line_number": 0,
-        "line_content": "22:22",
-        "category": "network"
+        "title": "La imagen usa 'latest' o un tag no fijado",
+        "description": "Usar el tag 'latest' o no usar ning\u00fan tag hace que las construcciones sean no deterministas. Una actualizaci\u00f3n futura de la imagen podr\u00eda introducir vulnerabilidades o cambios que rompan el c\u00f3digo.",
+        "recommendation": "Fija tu imagen base a un digest espec\u00edfico o tag de versi\u00f3n, por ejemplo, 'FROM python:3.12.3-slim-bookworm@sha256:<digest>'.",
+        "line_number": 2,
+        "line_content": "FROM ubuntu:latest",
+        "category": "image",
+        "standards": [
+          "CIS Docker 4.3",
+          "SLSA Supply Chain"
+        ]
       },
       {
-        "rule_id": "COMPOSE_005",
-        "severity": "medium",
-        "title": "[web] Puerto vinculado a todas las interfaces",
-        "description": "El mapeo del puerto '0.0.0.0:80:80' es accesible desde cualquier interfaz de red.",
-        "recommendation": "Restr\u00ednjalo a 127.0.0.1:<host>:<contenedor> para servicios internos.",
-        "line_number": 0,
-        "line_content": "0.0.0.0:80:80",
-        "category": "network"
-      },
-      {
-        "rule_id": "COMPOSE_006",
-        "severity": "critical",
-        "title": "[web] Ruta sensible del host montada: /var/run/docker.sock",
-        "description": "Montar '/var/run/docker.sock' otorga al contenedor acceso a recursos cr\u00edticos del host. El montaje del socket Docker = control total del demonio Docker.",
-        "recommendation": "Usa vol\u00famenes con nombre de Docker o configuraciones/secretos de Docker en su lugar.",
-        "line_number": 0,
-        "line_content": "/var/run/docker.sock:/var/run/docker.sock",
-        "category": "filesystem"
-      },
-      {
-        "rule_id": "COMPOSE_006",
-        "severity": "high",
-        "title": "[web] Ruta sensible del host montada: /etc",
-        "description": "Montar '/etc' otorga al contenedor acceso a recursos cr\u00edticos del host.",
-        "recommendation": "Usa vol\u00famenes con nombre de Docker o configuraciones/secretos de Docker en su lugar.",
-        "line_number": 0,
-        "line_content": "/etc:/host-etc",
-        "category": "filesystem"
-      },
-      {
-        "rule_id": "COMPOSE_007",
-        "severity": "medium",
-        "title": "[web] Sin l\u00edmite de memoria",
-        "description": "Sin l\u00edmites de memoria, el contenedor puede agotar la memoria del host (DoS).",
-        "recommendation": "Configura deploy.resources.limits.memory (ej. '512m').",
-        "line_number": 0,
-        "line_content": "",
-        "category": "resources"
-      },
-      {
-        "rule_id": "COMPOSE_008",
+        "rule_id": "DOCKERFILE_014",
         "severity": "low",
-        "title": "[web] Sin l\u00edmite de CPU",
-        "description": "Sin l\u00edmites de CPU, el contenedor puede monopolizar todos los n\u00facleos.",
-        "recommendation": "Configura deploy.resources.limits.cpus (ej. '0.5').",
-        "line_number": 0,
-        "line_content": "",
-        "category": "resources"
+        "title": "Cache de paquetes APT no limpiada",
+        "description": "Mantener el cache de APT aumenta el tamano de la imagen y puede dejar metadatos innecesarios.",
+        "recommendation": "Agrega 'rm -rf /var/lib/apt/lists/*' en la misma instruccion RUN.",
+        "line_number": 5,
+        "line_content": "RUN apt-get update && apt-get install -y curl",
+        "category": "image",
+        "standards": []
       },
       {
-        "rule_id": "COMPOSE_012",
-        "severity": "medium",
-        "title": "[web] Etiqueta de imagen sin fijar",
-        "description": "La imagen 'nginx' no tiene una versi\u00f3n fija.",
-        "recommendation": "Fija a una versi\u00f3n espec\u00edfica, ej: 'nginx:1.27.0-alpine'.",
+        "rule_id": "DOCKERFILE_009",
+        "severity": "high",
+        "title": "Redirecci\u00f3n de script remoto a shell",
+        "description": "Descargar y ejecutar scripts directamente desde internet en una instrucci\u00f3n RUN es un vector com\u00fan de ataque de cadena de suministro. El contenido remoto podr\u00eda cambiar.",
+        "recommendation": "Descarga el script, verifica su checksum y luego ejec\u00fatalo. Es mejor incluir la dependencia directamente en el repositorio de c\u00f3digo.",
+        "line_number": 6,
+        "line_content": "RUN curl -fsSL https://insecure-website.com/install.sh | bash",
+        "category": "supply-chain",
+        "standards": [
+          "SLSA Supply Chain",
+          "OWASP Docker: Trusted Images"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_007",
+        "severity": "high",
+        "title": "Permisos de archivo inseguros (chmod 777)",
+        "description": "Establecer permisos en 777 otorga acceso completo de lectura/escritura/ejecuci\u00f3n a todos los usuarios. Dentro de un contenedor esto puede permitir escalada de privilegios si se combina con otras fallas.",
+        "recommendation": "Usa los permisos m\u00ednimos requeridos. Prefiere 750 o 755 para directorios y 640 o 644 para archivos.",
+        "line_number": 9,
+        "line_content": "RUN mkdir /app && chmod 777 /app",
+        "category": "filesystem",
+        "standards": [
+          "CIS Docker 4.8"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_003",
+        "severity": "critical",
+        "title": "Secreto en c\u00f3digo duro en la instrucci\u00f3n ENV",
+        "description": "Parece haber datos sensibles directamente en c\u00f3digo duro en una instrucci\u00f3n ENV: 'ENV API_KEY=********'. Los secretos integrados en las capas de la imagen son visibles mediante 'docker inspect' y en el historial de la imagen.",
+        "recommendation": "Usa los secretos de Docker BuildKit ('--mount=type=secret'), variables de entorno en tiempo de ejecuci\u00f3n o un gestor de secretos (Azure Key Vault, HashiCorp Vault).",
+        "line_number": 12,
+        "line_content": "ENV API_KEY=********",
+        "category": "secrets",
+        "standards": [
+          "CIS Docker 4.10",
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_003",
+        "severity": "critical",
+        "title": "Secreto en c\u00f3digo duro en la instrucci\u00f3n ENV",
+        "description": "Parece haber datos sensibles directamente en c\u00f3digo duro en una instrucci\u00f3n ENV: 'ENV DB_PASSWORD=********'. Los secretos integrados en las capas de la imagen son visibles mediante 'docker inspect' y en el historial de la imagen.",
+        "recommendation": "Usa los secretos de Docker BuildKit ('--mount=type=secret'), variables de entorno en tiempo de ejecuci\u00f3n o un gestor de secretos (Azure Key Vault, HashiCorp Vault).",
+        "line_number": 13,
+        "line_content": "ENV DB_PASSWORD=********",
+        "category": "secrets",
+        "standards": [
+          "CIS Docker 4.10",
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_002",
+        "severity": "high",
+        "title": "Puerto SSH 22 expuesto",
+        "description": "Exponer el puerto 22 (SSH) dentro de un contenedor Docker es un riesgo de seguridad significativo. Los contenedores no deber\u00edan correr servicios SSH; usa 'docker exec' para depuraci\u00f3n en su lugar.",
+        "recommendation": "Elimina la directiva 'EXPOSE 22'. Administra los contenedores mediante herramientas de orquestaci\u00f3n o 'docker exec' en lugar de SSH.",
+        "line_number": 16,
+        "line_content": "EXPOSE 22",
+        "category": "network",
+        "standards": [
+          "CIS Docker 5.4"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_011",
+        "severity": "high",
+        "title": "Falta instrucci\u00f3n USER \u2014 usa root por defecto",
+        "description": "Cuando no se especifica una instrucci\u00f3n USER, Docker por defecto ejecuta el contenedor como root (UID 0), otorgando privilegios elevados innecesarios.",
+        "recommendation": "Agrega un usuario dedicado que no sea root con 'RUN useradd -r -s /bin/false appuser' y establece 'USER appuser' antes del CMD/ENTRYPOINT.",
         "line_number": 0,
-        "line_content": "nginx",
-        "category": "image"
+        "line_content": "",
+        "category": "privilege",
+        "standards": [
+          "CIS Docker 4.1"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_012",
+        "severity": "low",
+        "title": "Falta instrucci\u00f3n HEALTHCHECK",
+        "description": "Sin un HEALTHCHECK, los orquestadores como Kubernetes no pueden determinar si el contenedor est\u00e1 realmente saludable y sirviendo tr\u00e1fico correctamente.",
+        "recommendation": "Agrega una instrucci\u00f3n HEALTHCHECK, ej: 'HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:8080/health || exit 1'",
+        "line_number": 0,
+        "line_content": "",
+        "category": "availability",
+        "standards": []
       }
     ],
     "summary": {
-      "total": 10,
+      "total": 9,
       "counts": {
-        "critical": 3,
-        "high": 2,
-        "medium": 4,
-        "low": 1,
+        "critical": 2,
+        "high": 4,
+        "medium": 1,
+        "low": 2,
         "info": 0
       },
       "categories": {
+        "image": 2,
+        "supply-chain": 1,
+        "filesystem": 1,
+        "secrets": 2,
+        "network": 1,
         "privilege": 1,
-        "network": 4,
-        "filesystem": 2,
-        "resources": 2,
-        "image": 1
+        "availability": 1
+      },
+      "standards": {
+        "CIS Docker 4.3": 1,
+        "SLSA Supply Chain": 2,
+        "OWASP Docker: Trusted Images": 1,
+        "CIS Docker 4.8": 1,
+        "CIS Docker 4.10": 2,
+        "OWASP Secrets Management": 2,
+        "CIS Docker 5.4": 1,
+        "CIS Docker 4.1": 1
       },
       "score": 0,
       "grade": "F",
-      "grade_color": "#ef4444"
+      "grade_color": "#dc2626",
+      "risk_level": "Critico",
+      "score_explanation": "Penalizacion total: 100 puntos (critico=2, alto=4, medio=1, bajo=2)."
     },
-    "lines_analyzed": 14,
-    "timestamp": "2026-05-09T03:26:18.673055+00:00"
+    "lines_analyzed": 19,
+    "timestamp": "2026-06-11T03:40:11.837483+00:00"
   },
   {
-    "id": "8f2ca85d-8e57-41ba-9f88-7291d2fe411a",
-    "filename": ".env",
+    "id": "a6ba6c1e-e3ba-4bc8-881c-faca79814830",
+    "filename": "kubernetes.yaml",
+    "file_type": "kubernetes",
+    "findings": [
+      {
+        "rule_id": "KUBERNETES_003",
+        "severity": "high",
+        "title": "[ConfigMap/app-config] Secreto en ConfigMap clave 'api-key'",
+        "description": "Los ConfigMaps no est\u00e1n dise\u00f1ados para datos sensibles \u2014 se guardan sin cifrar y son accesibles para cualquier pod con acceso RBAC.",
+        "recommendation": "Mueve los valores sensibles a Kubernetes Secrets o a un gestor externo (Azure Key Vault, HashiCorp Vault).",
+        "line_number": 0,
+        "line_content": "",
+        "category": "secrets",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_003",
+        "severity": "high",
+        "title": "[ConfigMap/app-config] Secreto en ConfigMap clave 'database-password'",
+        "description": "Los ConfigMaps no est\u00e1n dise\u00f1ados para datos sensibles \u2014 se guardan sin cifrar y son accesibles para cualquier pod con acceso RBAC.",
+        "recommendation": "Mueve los valores sensibles a Kubernetes Secrets o a un gestor externo (Azure Key Vault, HashiCorp Vault).",
+        "line_number": 0,
+        "line_content": "",
+        "category": "secrets",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_019",
+        "severity": "medium",
+        "title": "[Deployment/insecure-deployment] Token de ServiceAccount montado automaticamente",
+        "description": "Montar automaticamente el token de ServiceAccount aumenta el impacto de una intrusion en el pod.",
+        "recommendation": "Configura automountServiceAccountToken:false si la carga no necesita llamar al API de Kubernetes.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "rbac",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_020",
+        "severity": "medium",
+        "title": "[Deployment/insecure-deployment] Falta perfil seccomp seguro",
+        "description": "Sin seccomp RuntimeDefault o Localhost, el contenedor queda con una superficie mayor de syscalls.",
+        "recommendation": "Configura securityContext.seccompProfile.type: RuntimeDefault.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_004",
+        "severity": "critical",
+        "title": "[Deployment/insecure-deployment] hostNetwork activado",
+        "description": "hostNetwork comparte el espacio de red del host, omitiendo pol\u00edticas de red y exponiendo los servicios del host al contenedor.",
+        "recommendation": "Elimina hostNetwork:true. Usa servicios ClusterIP.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "network",
+        "standards": [
+          "Pod Security Standards: Restricted"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_005",
+        "severity": "critical",
+        "title": "[Deployment/insecure-deployment] hostPID activado",
+        "description": "hostPID comparte el namespace de procesos del host, permitiendo al contenedor ver los procesos del host \u2014 una brecha grave de aislamiento.",
+        "recommendation": "Elimina hostPID:true.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": [
+          "Pod Security Standards: Restricted"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_008",
+        "severity": "critical",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' es privilegiado",
+        "description": "privileged:true elimina todo el aislamiento del contenedor.",
+        "recommendation": "Elimina privileged:true. Usa capabilities espec\u00edficos.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": [
+          "Pod Security Standards: Restricted"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_009",
+        "severity": "high",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' ejecuta como root (UID 0)",
+        "description": "runAsUser:0 fuerza la ejecuci\u00f3n como root.",
+        "recommendation": "Establece runAsUser a un UID mayor que cero y usa runAsNonRoot:true.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": [
+          "Pod Security Standards: Restricted"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_011",
+        "severity": "high",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' permite escalada de privilegios",
+        "description": "allowPrivilegeEscalation:true permite a los procesos obtener m\u00e1s privilegios que su proceso padre.",
+        "recommendation": "Configura allowPrivilegeEscalation:false.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": [
+          "Pod Security Standards: Restricted"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_012",
+        "severity": "medium",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' tiene sistema de archivos root escribible",
+        "description": "Un rootfs escribible permite a los atacantes modificar binarios o guardar c\u00f3digo malicioso.",
+        "recommendation": "Usa readOnlyRootFilesystem:true y monta vol\u00famenes solo en donde se requiere.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "filesystem",
+        "standards": [
+          "NSA/CISA Kubernetes Hardening"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_013",
+        "severity": "medium",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' usa imagen sin fijar",
+        "description": "La imagen 'nginx:latest' no tiene versi\u00f3n fija, haciendo el despliegue no determinista.",
+        "recommendation": "Fija a un digest espec\u00edfico, ej: 'nginx:1.27.0-alpine@sha256:<digest>'.",
+        "line_number": 0,
+        "line_content": "nginx:latest",
+        "category": "image",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_014",
+        "severity": "medium",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' no tiene l\u00edmite de memoria",
+        "description": "Sin l\u00edmite de memoria, puede agotar los recursos del nodo.",
+        "recommendation": "Define resources.limits.memory.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "resources",
+        "standards": [
+          "Kubernetes Resource Management"
+        ]
+      },
+      {
+        "rule_id": "KUBERNETES_015",
+        "severity": "low",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' no tiene l\u00edmite de CPU",
+        "description": "Sin l\u00edmite de CPU, puede monopolizar los ciclos del procesador.",
+        "recommendation": "Define resources.limits.cpu.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "resources",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_021",
+        "severity": "low",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' no elimina capacidades Linux",
+        "description": "Las capacidades por defecto amplian la superficie de ataque si la aplicacion es comprometida.",
+        "recommendation": "Configura securityContext.capabilities.drop: ['ALL'] y agrega solo las necesarias.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_017",
+        "severity": "high",
+        "title": "[Deployment/insecure-deployment] Contenedor 'web' tiene secreto incrustado en env: SECRET_TOKEN",
+        "description": "La variable 'SECRET_TOKEN' parece contener un secreto.",
+        "recommendation": "Usa Kubernetes Secrets con valueFrom.secretKeyRef en su lugar.",
+        "line_number": 0,
+        "line_content": "SECRET_TOKEN=my-raw-environment-token-value",
+        "category": "secrets",
+        "standards": []
+      },
+      {
+        "rule_id": "KUBERNETES_001",
+        "severity": "critical",
+        "title": "[ClusterRoleBinding/admin-binding] Permiso RBAC cluster-admin",
+        "description": "Vincular usuarios al ClusterRole cluster-admin otorga acceso sin restricciones a todos los recursos de Kubernetes en todos los namespaces.",
+        "recommendation": "Sigue el principio de m\u00ednimo privilegio: crea Roles limitados con los permisos exactos.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "rbac",
+        "standards": [
+          "NSA/CISA Kubernetes: RBAC",
+          "Kubernetes Least Privilege"
+        ]
+      }
+    ],
+    "summary": {
+      "total": 16,
+      "counts": {
+        "critical": 4,
+        "high": 5,
+        "medium": 5,
+        "low": 2,
+        "info": 0
+      },
+      "categories": {
+        "secrets": 3,
+        "rbac": 2,
+        "privilege": 6,
+        "network": 1,
+        "filesystem": 1,
+        "image": 1,
+        "resources": 2
+      },
+      "standards": {
+        "Pod Security Standards: Restricted": 5,
+        "NSA/CISA Kubernetes Hardening": 1,
+        "Kubernetes Resource Management": 1,
+        "NSA/CISA Kubernetes: RBAC": 1,
+        "Kubernetes Least Privilege": 1
+      },
+      "score": 0,
+      "grade": "F",
+      "grade_color": "#dc2626",
+      "risk_level": "Critico",
+      "score_explanation": "Penalizacion total: 100 puntos (critico=4, alto=5, medio=5, bajo=2)."
+    },
+    "lines_analyzed": 49,
+    "timestamp": "2026-06-11T03:40:32.792190+00:00"
+  },
+  {
+    "id": "7ce6600f-64e7-4ded-b4f4-87234ea92f16",
+    "filename": "vulnerable.env",
     "file_type": "env",
     "findings": [
       {
         "rule_id": "ENV_001",
-        "severity": "critical",
-        "title": "Secreto expuesto: SECRET_KEY",
-        "description": "La variable de entorno 'SECRET_KEY' parece contener un/una secreto. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
+        "severity": "high",
+        "title": "Url de base de datos expuesto: DATABASE_URL",
+        "description": "La variable de entorno 'DATABASE_URL' parece contener un/una URL de base de datos. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
         "recommendation": "Agrega el archivo .env a .gitignore inmediatamente. Usa un administrador de secretos (Azure Key Vault, AWS Secrets Manager) en lugar de un .env en la nube.",
-        "line_number": 8,
-        "line_content": "SECRET_KEY=********",
-        "category": "secrets"
+        "line_number": 2,
+        "line_content": "DATABASE_URL=********",
+        "category": "secrets",
+        "standards": [
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "ENV_001",
+        "severity": "critical",
+        "title": "Contrase\u00f1a expuesto: DB_PASSWORD",
+        "description": "La variable de entorno 'DB_PASSWORD' parece contener un/una contrase\u00f1a. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
+        "recommendation": "Agrega el archivo .env a .gitignore inmediatamente. Usa un administrador de secretos (Azure Key Vault, AWS Secrets Manager) en lugar de un .env en la nube.",
+        "line_number": 3,
+        "line_content": "DB_PASSWORD=********",
+        "category": "secrets",
+        "standards": [
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "ENV_001",
+        "severity": "critical",
+        "title": "Credencial aws expuesto: AWS_ACCESS_KEY_ID",
+        "description": "La variable de entorno 'AWS_ACCESS_KEY_ID' parece contener un/una credencial AWS. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
+        "recommendation": "Agrega el archivo .env a .gitignore inmediatamente. Usa un administrador de secretos (Azure Key Vault, AWS Secrets Manager) en lugar de un .env en la nube.",
+        "line_number": 6,
+        "line_content": "AWS_ACCESS_KEY_ID=********",
+        "category": "secrets",
+        "standards": [
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "ENV_001",
+        "severity": "critical",
+        "title": "Secreto expuesto: AWS_SECRET_ACCESS_KEY",
+        "description": "La variable de entorno 'AWS_SECRET_ACCESS_KEY' parece contener un/una secreto. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
+        "recommendation": "Agrega el archivo .env a .gitignore inmediatamente. Usa un administrador de secretos (Azure Key Vault, AWS Secrets Manager) en lugar de un .env en la nube.",
+        "line_number": 7,
+        "line_content": "AWS_SECRET_ACCESS_KEY=********",
+        "category": "secrets",
+        "standards": [
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "ENV_001",
+        "severity": "critical",
+        "title": "Clave api expuesto: STRIPE_API_KEY",
+        "description": "La variable de entorno 'STRIPE_API_KEY' parece contener un/una clave API. Subir archivos .env con credenciales reales al control de versiones es un riesgo cr\u00edtico de seguridad.",
+        "recommendation": "Agrega el archivo .env a .gitignore inmediatamente. Usa un administrador de secretos (Azure Key Vault, AWS Secrets Manager) en lugar de un .env en la nube.",
+        "line_number": 10,
+        "line_content": "STRIPE_API_KEY=********",
+        "category": "secrets",
+        "standards": [
+          "OWASP Secrets Management"
+        ]
+      },
+      {
+        "rule_id": "ENV_002",
+        "severity": "high",
+        "title": "Valor sospechoso de secreto para clave: SLACK_WEBHOOK_URL",
+        "description": "El valor de 'SLACK_WEBHOOK_URL' coincide con un formato de secreto conocido (Valor en Base64). Incluso si el nombre de la clave parece inocuo, este valor no debe almacenarse en texto plano.",
+        "recommendation": "Rota la credencial inmediatamente si es real. Almacena secretos en un administrador de secretos.",
+        "line_number": 11,
+        "line_content": "SLACK_WEBHOOK_URL=********",
+        "category": "secrets",
+        "standards": [
+          "OWASP Secrets Management"
+        ]
       }
     ],
     "summary": {
-      "total": 1,
+      "total": 6,
       "counts": {
-        "critical": 1,
-        "high": 0,
+        "critical": 4,
+        "high": 2,
         "medium": 0,
         "low": 0,
         "info": 0
       },
       "categories": {
-        "secrets": 1
+        "secrets": 6
       },
-      "score": 75,
-      "grade": "B",
-      "grade_color": "#84cc16"
+      "standards": {
+        "OWASP Secrets Management": 6
+      },
+      "score": 0,
+      "grade": "F",
+      "grade_color": "#dc2626",
+      "risk_level": "Critico",
+      "score_explanation": "Penalizacion total: 100 puntos (critico=4, alto=2, medio=0, bajo=0)."
     },
-    "lines_analyzed": 12,
-    "timestamp": "2026-05-09T03:26:36.087474+00:00"
+    "lines_analyzed": 15,
+    "timestamp": "2026-06-11T03:42:13.444679+00:00"
+  },
+  {
+    "id": "71ad123d-f17e-40b8-9353-391e220389f4",
+    "filename": "Dockerfile",
+    "file_type": "dockerfile",
+    "findings": [
+      {
+        "rule_id": "DOCKERFILE_005",
+        "severity": "medium",
+        "title": "La imagen usa 'latest' o un tag no fijado",
+        "description": "Usar el tag 'latest' o no usar ning\u00fan tag hace que las construcciones sean no deterministas. Una actualizaci\u00f3n futura de la imagen podr\u00eda introducir vulnerabilidades o cambios que rompan el c\u00f3digo.",
+        "recommendation": "Fija tu imagen base a un digest espec\u00edfico o tag de versi\u00f3n, por ejemplo, 'FROM python:3.12.3-slim-bookworm@sha256:<digest>'.",
+        "line_number": 2,
+        "line_content": "FROM ubuntu:latest",
+        "category": "image",
+        "standards": [
+          "CIS Docker 4.3",
+          "SLSA Supply Chain"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_014",
+        "severity": "low",
+        "title": "Cache de paquetes APT no limpiada",
+        "description": "Mantener el cache de APT aumenta el tamano de la imagen y puede dejar metadatos innecesarios.",
+        "recommendation": "Agrega 'rm -rf /var/lib/apt/lists/*' en la misma instruccion RUN.",
+        "line_number": 5,
+        "line_content": "RUN apt-get update && apt-get install -y curl",
+        "category": "image",
+        "standards": []
+      },
+      {
+        "rule_id": "DOCKERFILE_009",
+        "severity": "high",
+        "title": "Redirecci\u00f3n de script remoto a shell",
+        "description": "Descargar y ejecutar scripts directamente desde internet en una instrucci\u00f3n RUN es un vector com\u00fan de ataque de cadena de suministro. El contenido remoto podr\u00eda cambiar.",
+        "recommendation": "Descarga el script, verifica su checksum y luego ejec\u00fatalo. Es mejor incluir la dependencia directamente en el repositorio de c\u00f3digo.",
+        "line_number": 6,
+        "line_content": "RUN curl -fsSL https://insecure-website.com/install.sh | bash",
+        "category": "supply-chain",
+        "standards": [
+          "SLSA Supply Chain",
+          "OWASP Docker: Trusted Images"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_007",
+        "severity": "high",
+        "title": "Permisos de archivo inseguros (chmod 777)",
+        "description": "Establecer permisos en 777 otorga acceso completo de lectura/escritura/ejecuci\u00f3n a todos los usuarios. Dentro de un contenedor esto puede permitir escalada de privilegios si se combina con otras fallas.",
+        "recommendation": "Usa los permisos m\u00ednimos requeridos. Prefiere 750 o 755 para directorios y 640 o 644 para archivos.",
+        "line_number": 9,
+        "line_content": "RUN mkdir /app && chmod 777 /app",
+        "category": "filesystem",
+        "standards": [
+          "CIS Docker 4.8"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_011",
+        "severity": "high",
+        "title": "Falta instrucci\u00f3n USER \u2014 usa root por defecto",
+        "description": "Cuando no se especifica una instrucci\u00f3n USER, Docker por defecto ejecuta el contenedor como root (UID 0), otorgando privilegios elevados innecesarios.",
+        "recommendation": "Agrega un usuario dedicado que no sea root con 'RUN useradd -r -s /bin/false appuser' y establece 'USER appuser' antes del CMD/ENTRYPOINT.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": [
+          "CIS Docker 4.1"
+        ]
+      },
+      {
+        "rule_id": "DOCKERFILE_012",
+        "severity": "low",
+        "title": "Falta instrucci\u00f3n HEALTHCHECK",
+        "description": "Sin un HEALTHCHECK, los orquestadores como Kubernetes no pueden determinar si el contenedor est\u00e1 realmente saludable y sirviendo tr\u00e1fico correctamente.",
+        "recommendation": "Agrega una instrucci\u00f3n HEALTHCHECK, ej: 'HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:8080/health || exit 1'",
+        "line_number": 0,
+        "line_content": "",
+        "category": "availability",
+        "standards": []
+      }
+    ],
+    "summary": {
+      "total": 6,
+      "counts": {
+        "critical": 0,
+        "high": 3,
+        "medium": 1,
+        "low": 2,
+        "info": 0
+      },
+      "categories": {
+        "image": 2,
+        "supply-chain": 1,
+        "filesystem": 1,
+        "privilege": 1,
+        "availability": 1
+      },
+      "standards": {
+        "CIS Docker 4.3": 1,
+        "SLSA Supply Chain": 2,
+        "OWASP Docker: Trusted Images": 1,
+        "CIS Docker 4.8": 1,
+        "CIS Docker 4.1": 1
+      },
+      "score": 44,
+      "grade": "D",
+      "grade_color": "#ea580c",
+      "risk_level": "Alto",
+      "score_explanation": "Penalizacion total: 56 puntos (critico=0, alto=3, medio=1, bajo=2)."
+    },
+    "lines_analyzed": 16,
+    "timestamp": "2026-06-11T03:43:11.308835+00:00"
   }
 ]

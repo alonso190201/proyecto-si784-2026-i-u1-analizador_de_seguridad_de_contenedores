@@ -17,8 +17,8 @@ DANGEROUS_PORTS = {
 }
 
 SECRET_KEY_PATTERNS = re.compile(
-    r"(?i)^(password|passwd|pwd|secret|token|api[_-]?key|apikey|"
-    r"auth[_-]?token|private[_-]?key|aws_access|aws_secret|db[_-]?pass)\s*=\s*\S+"
+    r"(?i)^[A-Z0-9_.-]*(password|passwd|pwd|secret|token|api[_-]?key|apikey|"
+    r"auth[_-]?token|private[_-]?key|aws_access|aws_secret|db[_-]?(pass|password))[A-Z0-9_.-]*\s*=\s*\S+"
 )
 
 
@@ -158,6 +158,35 @@ class ComposeAnalyzer(BaseAnalyzer):
                     "011", HIGH, f"[{n}] Servicio ejecutándose como root",
                     "Ejecutar explícitamente como root maximiza el impacto si hay un escape del contenedor.",
                     "Configura user: a un UID que no sea root, ej: '1001:1001'.",
+                    category="privilege",
+                ))
+
+            # writable root filesystem
+            if svc_cfg.get("read_only") is not True:
+                findings.append(self._make_finding(
+                    "013", MEDIUM, f"[{n}] Sistema de archivos root escribible",
+                    "Un root filesystem escribible permite persistir cambios maliciosos dentro del contenedor.",
+                    "Configura read_only:true y monta volumenes temporales solo donde la aplicacion escriba.",
+                    category="filesystem",
+                ))
+
+            # missing no-new-privileges
+            security_opts = [str(opt).lower() for opt in svc_cfg.get("security_opt", []) or []]
+            if "no-new-privileges:true" not in security_opts:
+                findings.append(self._make_finding(
+                    "014", MEDIUM, f"[{n}] Falta no-new-privileges",
+                    "Sin no-new-privileges, un proceso puede obtener privilegios adicionales mediante binarios setuid.",
+                    "Agrega security_opt: ['no-new-privileges:true'].",
+                    category="privilege",
+                ))
+
+            # missing cap_drop all
+            cap_drop = {str(cap).upper() for cap in svc_cfg.get("cap_drop", []) or []}
+            if "ALL" not in cap_drop:
+                findings.append(self._make_finding(
+                    "015", LOW, f"[{n}] No elimina capacidades por defecto",
+                    "Docker entrega un conjunto de capacidades por defecto que muchas aplicaciones no necesitan.",
+                    "Agrega cap_drop: ['ALL'] y usa cap_add solo para capacidades justificadas.",
                     category="privilege",
                 ))
 

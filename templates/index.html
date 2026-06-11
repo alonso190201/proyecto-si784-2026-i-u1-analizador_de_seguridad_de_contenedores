@@ -1,136 +1,122 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    
-    <!-- Hero Stats Row -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-sm-6">
-            <div class="stat-card glass-card">
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="fa-solid fa-file-shield"></i>
-                </div>
-                <div class="stat-details">
-                    <h3 id="statTotalScans">0</h3>
-                    <span>Escaneos Totales</span>
-                </div>
-            </div>
+<div class="metrics-grid">
+    <section class="metric-tile accent-blue">
+        <span class="metric-icon"><i class="fa-solid fa-file-shield"></i></span>
+        <div>
+            <strong id="statTotalScans">0</strong>
+            <span>Escaneos</span>
         </div>
-        <div class="col-xl-3 col-sm-6">
-            <div class="stat-card glass-card">
-                <div class="stat-icon bg-danger-subtle text-danger">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div class="stat-details">
-                    <h3 id="statCritical">0</h3>
-                    <span>Riesgos Críticos</span>
-                </div>
-            </div>
+    </section>
+    <section class="metric-tile accent-red">
+        <span class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <div>
+            <strong id="statCritical">0</strong>
+            <span>Criticos</span>
         </div>
-        <div class="col-xl-3 col-sm-6">
-            <div class="stat-card glass-card">
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                </div>
-                <div class="stat-details">
-                    <h3 id="statHigh">0</h3>
-                    <span>Riesgos Altos</span>
-                </div>
-            </div>
+    </section>
+    <section class="metric-tile accent-orange">
+        <span class="metric-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+        <div>
+            <strong id="statHigh">0</strong>
+            <span>Altos</span>
         </div>
-        <div class="col-xl-3 col-sm-6">
-            <div class="stat-card glass-card">
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="fa-solid fa-shield-check"></i>
-                </div>
-                <div class="stat-details">
-                    <h3 id="statAvgScore">--</h3>
-                    <span>Puntuación Media</span>
-                </div>
-            </div>
+    </section>
+    <section class="metric-tile accent-green">
+        <span class="metric-icon"><i class="fa-solid fa-gauge-high"></i></span>
+        <div>
+            <strong id="statAvgScore">--</strong>
+            <span>Promedio</span>
         </div>
-    </div>
+    </section>
+</div>
 
-    <div class="row g-4">
-        <!-- Upload Column -->
-        <div class="col-lg-5">
-            <div class="glass-card p-4 h-100 d-flex flex-column">
-                <h5 class="card-title mb-4"><i class="fa-solid fa-cloud-arrow-up text-cyan me-2"></i> Subir Configuraciones</h5>
-                <p class="text-muted small mb-4">Sube archivos Dockerfile, docker-compose, Kubernetes YAML o .env para un análisis estático de seguridad. Ningún contenedor será ejecutado.</p>
-                
-                <div id="dropZone" class="upload-zone flex-grow-1 d-flex flex-column justify-content-center align-items-center">
-                    <i class="fa-solid fa-file-arrow-up fa-3x mb-3 text-cyan drop-icon"></i>
-                    <h4>Arrastra y Suelta Archivos Aquí</h4>
-                    <p class="text-muted small">o</p>
-                    <button class="btn btn-cyan px-4" onclick="document.getElementById('fileInput').click()">
-                        Explorar Archivos
-                    </button>
-                    <input type="file" id="fileInput" multiple class="d-none" accept=".yml,.yaml,.env,Dockerfile,.txt,.cfg,.conf,.json,.toml">
-                </div>
-                
-                <div id="uploadQueue" class="mt-3">
-                    <!-- Queued files appear here -->
-                </div>
-                
-                <div class="mt-4 text-end">
-                    <button id="analyzeBtn" class="btn btn-primary px-5 w-100" disabled>
-                        <i class="fa-solid fa-radar fa-spin me-2 d-none" id="analyzeSpinner"></i>
-                        <span>Iniciar Análisis</span>
-                    </button>
-                </div>
+<div class="main-grid">
+    <section class="panel upload-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Entrada</p>
+                <h2>Archivos</h2>
             </div>
+            <span class="limit-pill">2 MB max.</span>
         </div>
 
-        <!-- Results Column -->
-        <div class="col-lg-7">
-            <div class="glass-card p-4 h-100 d-flex flex-column" id="resultsContainer">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title mb-0"><i class="fa-solid fa-list-check text-cyan me-2"></i> Resultados del Análisis</h5>
-                    <button id="exportBtn" class="btn btn-sm btn-outline-success d-none">
-                        <i class="fa-solid fa-file-export me-1"></i> Exportar Reporte
+        <div id="dropZone" class="upload-zone" role="button" tabindex="0">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h3>Soltar archivos aqui</h3>
+            <p>Dockerfile, Compose, Kubernetes o .env</p>
+            <button class="btn btn-primary" type="button" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-folder-open"></i>
+                Seleccionar
+            </button>
+            <input type="file" id="fileInput" multiple class="d-none" accept=".yml,.yaml,.env,Dockerfile,.txt,.cfg,.conf,.json,.toml">
+        </div>
+
+        <div id="uploadQueue" class="upload-queue"></div>
+
+        <button id="analyzeBtn" class="btn btn-dark w-100 action-button" disabled>
+            <span id="analyzeSpinner" class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+            Analizar
+        </button>
+    </section>
+
+    <section class="panel results-panel" id="resultsContainer">
+        <div class="panel-heading results-heading">
+            <div>
+                <p class="eyebrow">Salida</p>
+                <h2>Resultados</h2>
+            </div>
+            <div class="result-actions">
+                <div class="btn-group severity-filter" role="group" aria-label="Filtro de severidad">
+                    <button class="btn btn-outline-secondary active" data-filter-severity="all">Todo</button>
+                    <button class="btn btn-outline-secondary" data-filter-severity="critical">Critico</button>
+                    <button class="btn btn-outline-secondary" data-filter-severity="high">Alto</button>
+                    <button class="btn btn-outline-secondary" data-filter-severity="medium">Medio</button>
+                </div>
+                <div class="export-group d-none" id="exportGroup">
+                    <select id="exportFormat" class="form-select form-select-sm" aria-label="Formato de exportacion">
+                        <option value="html">HTML</option>
+                        <option value="json">JSON</option>
+                        <option value="sarif">SARIF</option>
+                    </select>
+                    <button id="exportBtn" class="btn btn-success btn-sm">
+                        <i class="fa-solid fa-download"></i>
+                        Exportar
                     </button>
                 </div>
-                
-                <div id="emptyState" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center text-muted">
-                    <i class="fa-solid fa-microscope fa-4x mb-3 opacity-25"></i>
-                    <h5>Esperando telemetría...</h5>
-                    <p class="small">Sube archivos para ver los hallazgos de seguridad y recomendaciones.</p>
-                </div>
-
-                <div id="loadingState" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center d-none">
-                    <div class="cyber-loader mb-4"></div>
-                    <h5>Escaneando Configuraciones...</h5>
-                    <p class="text-muted small analyzer-status">Ejecutando motor heurístico</p>
-                </div>
-
-                <div id="resultsContent" class="flex-grow-1 d-none overflow-auto">
-                    <!-- Chart and Score -->
-                    <div class="row mb-4 align-items-center">
-                        <div class="col-md-5 text-center">
-                            <div class="score-circle mx-auto mb-2" id="scoreCircle">
-                                <span class="score-value" id="scoreValue">100</span>
-                            </div>
-                            <span class="badge bg-secondary" id="gradeBadge">Grado: A</span>
-                        </div>
-                        <div class="col-md-7">
-                            <canvas id="severityChart" height="150"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- File Tabs (if multiple) -->
-                    <ul class="nav nav-pills mb-3 custom-tabs" id="fileTabs" role="tablist">
-                        <!-- Tabs injected via JS -->
-                    </ul>
-                    
-                    <!-- Findings -->
-                    <div class="tab-content" id="findingsTabContent">
-                        <!-- Findings injected via JS -->
-                    </div>
-                </div>
-
             </div>
         </div>
-    </div>
+
+        <div id="emptyState" class="empty-state">
+            <i class="fa-solid fa-shield-heart"></i>
+            <h3>Sin analisis activo</h3>
+            <p>Los hallazgos apareceran aqui.</p>
+        </div>
+
+        <div id="loadingState" class="loading-state d-none">
+            <div class="loader-ring"></div>
+            <h3>Analizando</h3>
+            <p class="analyzer-status">Procesando reglas</p>
+        </div>
+
+        <div id="resultsContent" class="results-content d-none">
+            <div class="score-band">
+                <div class="score-block">
+                    <span id="gradeBadge" class="grade-badge">A</span>
+                    <strong id="scoreValue">100</strong>
+                    <small id="scoreExplanation">Sin penalizaciones.</small>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+
+            <ul class="nav nav-pills file-tabs" id="fileTabs" role="tablist"></ul>
+            <div class="tab-content findings-stack" id="findingsTabContent"></div>
+        </div>
+    </section>
 </div>
 {% endblock %}
 

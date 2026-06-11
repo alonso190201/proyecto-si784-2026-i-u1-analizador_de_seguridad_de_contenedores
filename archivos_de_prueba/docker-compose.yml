@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web-app:
+    # Imagen sin versión fija (latest) (-7 puntos)
+    image: nginx:latest
+
+    # Mapeo de puerto expuesto a todas las interfaces (-7 puntos)
+    ports:
+      - "0.0.0.0:80:80"
+
+    # NOTA: Se eliminaron privileged: true, pid: host, network_mode: host,
+    # el volumen de docker.sock y las variables de entorno con secretos.
+
+    # Sin límites de memoria (-7 puntos) y sin límites de CPU (-2 puntos)
+    # Falta no-new-privileges en security_opt (-7 puntos)

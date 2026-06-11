@@ -80,6 +80,16 @@ class KubernetesAnalyzer(BaseAnalyzer):
                         category="secrets",
                     ))
 
+        if kind == "Service":
+            svc_type = spec.get("type", "ClusterIP")
+            if svc_type in ("NodePort", "LoadBalancer"):
+                findings.append(self._make_finding(
+                    "018", MEDIUM, f"[{ref}] Servicio expuesto como {svc_type}",
+                    f"El tipo {svc_type} puede exponer la aplicacion fuera del cluster.",
+                    "Usa ClusterIP por defecto y publica trafico mediante Ingress/Gateway con controles de acceso.",
+                    category="network",
+                ))
+
         # Pod / Deployment / DaemonSet / StatefulSet / Job / CronJob
         pod_specs = self._extract_pod_specs(doc)
         for pod_spec in pod_specs:
@@ -114,6 +124,25 @@ class KubernetesAnalyzer(BaseAnalyzer):
         return specs
 
     def _check_pod_spec(self, findings: List[Finding], ref: str, pod_spec: dict):
+        pod_ctx = pod_spec.get("securityContext", {}) or {}
+
+        if pod_spec.get("automountServiceAccountToken") is not False:
+            findings.append(self._make_finding(
+                "019", MEDIUM, f"[{ref}] Token de ServiceAccount montado automaticamente",
+                "Montar automaticamente el token de ServiceAccount aumenta el impacto de una intrusion en el pod.",
+                "Configura automountServiceAccountToken:false si la carga no necesita llamar al API de Kubernetes.",
+                category="rbac",
+            ))
+
+        pod_seccomp = (pod_ctx.get("seccompProfile", {}) or {}).get("type")
+        if pod_seccomp not in ("RuntimeDefault", "Localhost"):
+            findings.append(self._make_finding(
+                "020", MEDIUM, f"[{ref}] Falta perfil seccomp seguro",
+                "Sin seccomp RuntimeDefault o Localhost, el contenedor queda con una superficie mayor de syscalls.",
+                "Configura securityContext.seccompProfile.type: RuntimeDefault.",
+                category="privilege",
+            ))
+
         # hostNetwork
         if pod_spec.get("hostNetwork") is True:
             findings.append(self._make_finding(
@@ -248,6 +277,15 @@ class KubernetesAnalyzer(BaseAnalyzer):
                         "Elimina todas las capacidades y añade solo las necesarias.",
                         line_content=str(cap), category="privilege",
                     ))
+
+            dropped = {str(cap).upper() for cap in caps.get("drop", []) or []}
+            if "ALL" not in dropped:
+                findings.append(self._make_finding(
+                    "021", LOW, f"[{ref}] Contenedor '{cname}' no elimina capacidades Linux",
+                    "Las capacidades por defecto amplian la superficie de ataque si la aplicacion es comprometida.",
+                    "Configura securityContext.capabilities.drop: ['ALL'] y agrega solo las necesarias.",
+                    category="privilege",
+                ))
 
             # Env secrets
             for env_var in container.get("env", []) or []:

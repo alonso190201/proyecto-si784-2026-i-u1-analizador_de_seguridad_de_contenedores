@@ -2,12 +2,20 @@
 routes/api.py - REST API endpoints for file analysis and reporting.
 """
 from __future__ import annotations
-import json
+import re
 import uuid
 from flask import Blueprint, request, jsonify, Response
 
 from services.file_service import allowed_file, detect_file_type, read_file_content
-from services.report_service import build_summary, generate_html_report
+from services.report_service import (
+    build_summary,
+    enrich_findings,
+    generate_html_report,
+    generate_json_report,
+    generate_sarif_report,
+)
+from services.auth_service import require_api_token
+from services.sanitization_service import sanitize_result
 from services import history_service
 
 from analyzers.dockerfile_analyzer import DockerfileAnalyzer
@@ -27,6 +35,7 @@ ANALYZERS = {
 
 
 @api_bp.route("/analyze", methods=["POST"])
+@require_api_token
 def analyze():
     """
     Accept one or more uploaded files, analyze each, and return a JSON
@@ -77,7 +86,7 @@ def analyze():
         # Run analysis
         analyzer = analyzer_cls()
         raw_findings = analyzer.analyze(content, filename=filename)
-        findings_dicts = [f.to_dict() for f in raw_findings]
+        findings_dicts = enrich_findings([f.to_dict() for f in raw_findings])
         summary = build_summary(findings_dicts)
 
         result_id = str(uuid.uuid4())
@@ -90,20 +99,23 @@ def analyze():
             "summary": summary,
             "lines_analyzed": len(content.splitlines()),
         }
+        result = sanitize_result(result)
         results.append(result)
 
-        # Store in persistent history (entire result)
+        # Store sanitized result in local JSON history. No database is required.
         history_service.add_entry(result)
 
     return jsonify(results), 200
 
 
 @api_bp.route("/history", methods=["GET"])
+@require_api_token
 def history():
     """Return the persistent analysis history summary (newest first)."""
     return jsonify(history_service.get_history_summary()), 200
 
 @api_bp.route("/history/<entry_id>", methods=["GET"])
+@require_api_token
 def history_detail(entry_id):
     """Return a full analysis entry by its ID."""
     entry = history_service.get_entry_by_id(entry_id)
@@ -113,6 +125,7 @@ def history_detail(entry_id):
 
 
 @api_bp.route("/history", methods=["DELETE"])
+@require_api_token
 def clear_history():
     """Clear the persistent analysis history."""
     history_service.clear_history()
@@ -120,6 +133,7 @@ def clear_history():
 
 
 @api_bp.route("/export", methods=["POST"])
+@require_api_token
 def export_report():
     """
     Accept a JSON analysis result and return a standalone HTML report
@@ -131,15 +145,28 @@ def export_report():
 
     filename = data.get("filename", "unknown")
     file_type = data.get("file_type", "unknown")
-    findings = data.get("findings", [])
+    findings = enrich_findings(data.get("findings", []))
     summary = data.get("summary") or build_summary(findings)
+    export_format = str(data.get("format", "html")).lower()
 
-    html = generate_html_report(filename, file_type, findings, summary)
+    if export_format == "json":
+        body = generate_json_report(filename, file_type, findings, summary)
+        mimetype = "application/json"
+        extension = "json"
+    elif export_format == "sarif":
+        body = generate_sarif_report(filename, file_type, findings, summary)
+        mimetype = "application/sarif+json"
+        extension = "sarif"
+    else:
+        body = generate_html_report(filename, file_type, findings, summary)
+        mimetype = "text/html"
+        extension = "html"
+
     safe_name = filename.replace("/", "_").replace("\\", "_")
     return Response(
-        html,
-        mimetype="text/html",
-        headers={"Content-Disposition": f'attachment; filename="reporte_{safe_name}.html"'},
+        body,
+        mimetype=mimetype,
+        headers={"Content-Disposition": f'attachment; filename="reporte_{safe_name}.{extension}"'},
     )
 
 
@@ -159,6 +186,3 @@ def _guess_from_content(content: str) -> str:
     if re.search(r"^\w+=", content, re.MULTILINE):
         return "env"
     return "unknown"
-
-
-import re  # noqa: E402 (placed after usage for readability)

@@ -14,6 +14,9 @@ class Config:
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 16 * 1024 * 1024))  # 16 MB
     DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
     TESTING = False
+    APP_AUTH_TOKEN = os.environ.get("APP_AUTH_TOKEN", "")
+    HISTORY_FILE = os.environ.get("HISTORY_FILE", "history.json")
+    STORE_FULL_HISTORY = os.environ.get("STORE_FULL_HISTORY", "true").lower() == "true"
 
     # Allowed file extensions for upload
     ALLOWED_EXTENSIONS = {
@@ -28,7 +31,7 @@ class Config:
         "toml",
     }
 
-    # Maximum findings to keep in memory history
+    # Maximum findings to keep in local JSON history
     HISTORY_MAX_SIZE = int(os.environ.get("HISTORY_MAX_SIZE", 50))
 
 
