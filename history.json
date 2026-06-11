@@ -613,5 +613,114 @@
     },
     "lines_analyzed": 16,
     "timestamp": "2026-06-11T03:43:11.308835+00:00"
+  },
+  {
+    "id": "42914fdf-ae63-4ea7-998b-07bd4a1bef13",
+    "filename": "docker-compose.yml",
+    "file_type": "compose",
+    "findings": [
+      {
+        "rule_id": "COMPOSE_005",
+        "severity": "medium",
+        "title": "[web-app] Puerto vinculado a todas las interfaces",
+        "description": "El mapeo del puerto '0.0.0.0:80:80' es accesible desde cualquier interfaz de red.",
+        "recommendation": "Restr\u00ednjalo a 127.0.0.1:<host>:<contenedor> para servicios internos.",
+        "line_number": 0,
+        "line_content": "0.0.0.0:80:80",
+        "category": "network",
+        "standards": []
+      },
+      {
+        "rule_id": "COMPOSE_007",
+        "severity": "medium",
+        "title": "[web-app] Sin l\u00edmite de memoria",
+        "description": "Sin l\u00edmites de memoria, el contenedor puede agotar la memoria del host (DoS).",
+        "recommendation": "Configura deploy.resources.limits.memory (ej. '512m').",
+        "line_number": 0,
+        "line_content": "",
+        "category": "resources",
+        "standards": []
+      },
+      {
+        "rule_id": "COMPOSE_008",
+        "severity": "low",
+        "title": "[web-app] Sin l\u00edmite de CPU",
+        "description": "Sin l\u00edmites de CPU, el contenedor puede monopolizar todos los n\u00facleos.",
+        "recommendation": "Configura deploy.resources.limits.cpus (ej. '0.5').",
+        "line_number": 0,
+        "line_content": "",
+        "category": "resources",
+        "standards": []
+      },
+      {
+        "rule_id": "COMPOSE_013",
+        "severity": "medium",
+        "title": "[web-app] Sistema de archivos root escribible",
+        "description": "Un root filesystem escribible permite persistir cambios maliciosos dentro del contenedor.",
+        "recommendation": "Configura read_only:true y monta volumenes temporales solo donde la aplicacion escriba.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "filesystem",
+        "standards": []
+      },
+      {
+        "rule_id": "COMPOSE_014",
+        "severity": "medium",
+        "title": "[web-app] Falta no-new-privileges",
+        "description": "Sin no-new-privileges, un proceso puede obtener privilegios adicionales mediante binarios setuid.",
+        "recommendation": "Agrega security_opt: ['no-new-privileges:true'].",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": []
+      },
+      {
+        "rule_id": "COMPOSE_015",
+        "severity": "low",
+        "title": "[web-app] No elimina capacidades por defecto",
+        "description": "Docker entrega un conjunto de capacidades por defecto que muchas aplicaciones no necesitan.",
+        "recommendation": "Agrega cap_drop: ['ALL'] y usa cap_add solo para capacidades justificadas.",
+        "line_number": 0,
+        "line_content": "",
+        "category": "privilege",
+        "standards": []
+      },
+      {
+        "rule_id": "COMPOSE_012",
+        "severity": "medium",
+        "title": "[web-app] Etiqueta de imagen sin fijar",
+        "description": "La imagen 'nginx:latest' no tiene una versi\u00f3n fija.",
+        "recommendation": "Fija a una versi\u00f3n espec\u00edfica, ej: 'nginx:1.27.0-alpine'.",
+        "line_number": 0,
+        "line_content": "nginx:latest",
+        "category": "image",
+        "standards": []
+      }
+    ],
+    "summary": {
+      "total": 7,
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "medium": 5,
+        "low": 2,
+        "info": 0
+      },
+      "categories": {
+        "network": 1,
+        "resources": 2,
+        "filesystem": 1,
+        "privilege": 2,
+        "image": 1
+      },
+      "standards": {},
+      "score": 61,
+      "grade": "C",
+      "grade_color": "#ca8a04",
+      "risk_level": "Moderado",
+      "score_explanation": "Penalizacion total: 39 puntos (critico=0, alto=0, medio=5, bajo=2)."
+    },
+    "lines_analyzed": 16,
+    "timestamp": "2026-06-11T04:05:29.965844+00:00"
   }
 ]

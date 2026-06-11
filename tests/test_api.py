@@ -76,14 +76,3 @@ def test_export_json_and_sarif():
     finally:
         cleanup(history_file)
 
-
-def test_optional_api_token_auth():
-    app, history_file = make_app()
-    try:
-        app.config["APP_AUTH_TOKEN"] = "expected"
-        client = app.test_client()
-
-        assert client.get("/api/history").status_code == 401
-        assert client.get("/api/history", headers={"X-API-Token": "expected"}).status_code == 200
-    finally:
-        cleanup(history_file)

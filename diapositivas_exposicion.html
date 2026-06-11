@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exposición: Container Security Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg: #070a13;
+            --card-bg: rgba(13, 20, 35, 0.85);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #2563eb;
+            --accent-glow: rgba(37, 99, 235, 0.45);
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --script-bg: #0f172a;
+            --script-accent: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .presentation-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px 30px;
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .logo i {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+
+        .slide-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 24px;
+            align-items: stretch;
+            margin: 15px 0;
+            min-height: 0;
+        }
+
+        .slide-screen {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            overflow-y: auto;
+        }
+
+        .slide-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            border-radius: 16px 0 0 16px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .slide-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+        }
+
+        .slide-title i {
+            color: var(--accent);
+        }
+
+        .slide-bullets {
+            list-style: none;
+            display: grid;
+            gap: 14px;
+        }
+
+        .slide-bullets li {
+            font-size: 17px;
+            line-height: 1.45;
+            padding-left: 24px;
+            position: relative;
+            color: #e5e7eb;
+        }
+
+        .slide-bullets li::before {
+            content: "\f054";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            top: 3px;
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        /* Contenedor de Capturas de Pantalla */
+        .capture-box {
+            position: relative;
+            margin-top: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0d131f;
+        }
+
+        .real-capture {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 280px;
+            object-fit: cover;
+        }
+
+        /* Mockup de respaldo (visible si la imagen falla) */
+        .mockup-dashboard {
+            background: #0d131f;
+            padding: 15px;
+            font-size: 11px;
+        }
+
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .mockup-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .mockup-stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mockup-stat-card i {
+            font-size: 12px;
+            padding: 4px;
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        .m-blue { background: #2563eb; }
+        .m-red { background: #dc2626; }
+        .m-orange { background: #ea580c; }
+        .m-green { background: #16a34a; }
+
+        .mockup-main {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 10px;
+        }
+
+        .mockup-left, .mockup-right {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 100px;
+        }
+
+        .mockup-dropzone {
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .mockup-finding {
+            border-left: 3px solid #dc2626;
+            background: rgba(220, 38, 38, 0.05);
+            padding: 5px;
+            border-radius: 0 4px 4px 0;
+            margin-top: 4px;
+        }
+
+        /* Simulador Interactivo de Sanitización */
+        .sanitizer-sim {
+            background: #090d16;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sim-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .sim-input {
+            flex: 1;
+            background: #111827;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #fff;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .sim-btn {
+            background: var(--accent);
+            border: 0;
+            color: #fff;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sim-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .sim-output {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+            color: #10b981;
+            font-size: 13px;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Panel Derecho: Guion del Expositor */
+        .script-panel {
+            background: var(--script-bg);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+
+        .script-header {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--script-accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+            padding-bottom: 6px;
+        }
+
+        .script-text {
+            font-size: 15px;
+            line-height: 1.65;
+            color: #cbd5e1;
+            flex: 1;
+        }
+
+        .script-text p {
+            margin-bottom: 12px;
+        }
+
+        .script-text strong {
+            color: #fff;
+            background: rgba(16, 185, 129, 0.18);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .cue-box {
+            background: rgba(37, 99, 235, 0.08);
+            border-left: 3px solid var(--accent);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 12.5px;
+            color: #93c5fd;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .kb-tip {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .slide-data {
+            display: none;
+        }
+
+        .teacher-tip {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid #f59e0b;
+            padding: 10px 12px;
+            border-radius: 0 8px 8px 0;
+            color: #fde047;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Exposición: Container Security Analyzer</span>
+            </div>
+            <div class="slide-counter" id="counter">1 / 9</div>
+        </header>
+
+        <div class="slide-body">
+            <!-- Izquierda: Proyección Dinámica -->
+            <div class="slide-screen" id="slideScreen">
+                <!-- Inyectado mediante JS -->
+            </div>
+
+            <!-- Derecha: Guion simple para el expositor -->
+            <div class="script-panel">
+                <div class="script-header">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                    <span>¿Qué decir? (Guion simple)</span>
+                </div>
+                <div class="script-text" id="scriptText">
+                    <!-- Inyectado mediante JS -->
+                </div>
+            </div>
+        </div>
+
+        <footer class="controls">
+            <button class="nav-btn" id="prevBtn" disabled>
+                <i class="fa-solid fa-arrow-left"></i> Anterior
+            </button>
+            <span class="kb-tip">Navegación: Flechas ← / → del Teclado</span>
+            <button class="nav-btn" id="nextBtn">
+                Siguiente <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </footer>
+    </div>
+
+    <!-- DIAPOSITIVAS Y SUS GUIONES SIMPLES -->
+    
+    <!-- DIAPOSITIVA 1: Portada -->
+    <div class="slide-data" data-title="Analizador de Seguridad de Contenedores" data-icon="fa-shield-halved">
+        <ul class="slide-bullets">
+            <li style="font-size: 20px; list-style:none; padding-left:0; font-weight:600; color: #fff;">Auditoría Estática de Calidad y Seguridad de Software</li>
+            <li style="list-style:none; padding-left:0; color: var(--text-muted); margin-top: 5px;">Herramienta para detectar vulnerabilidades en archivos Docker y Kubernetes de forma automatizada.</li>
+            <li style="list-style:none; padding-left:0; margin-top: 25px; font-size:16px;">
+                <strong>Expositor:</strong> Gustavo Sagua<br>
+                <strong>Curso:</strong> Calidad y Pruebas de Software<br>
+                <strong>Universidad Privada de Tacna</strong>
+            </li>
+        </ul>
+        <div class="script-content">
+            <p>"Buenas noches ingeniero, buenas noches compañeros. **Mi nombre es Gustavo Sagua** y hoy les voy a presentar mi proyecto final para el curso de Calidad y Pruebas de Software, llamado **Container Security Analyzer**."</p>
+            <p>"Este sistema es una herramienta automatizada que evalúa la calidad y la seguridad de los archivos que configuran nuestros contenedores, ayudando a los desarrolladores a corregir errores críticos antes de subir el software a producción."</p>
+            <div class="cue-box">
+                <strong>Consejo:</strong> Empieza con tranquilidad. La exposición está orientada a la calidad y pruebas de software.
+            </div>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 2: El Enfoque (Pruebas Estáticas) -->
+    <div class="slide-data" data-title="El Enfoque: Pruebas Estáticas" data-icon="fa-magnifying-glass">
+        <ul class="slide-bullets">
+            <li><strong>¿Qué es el Análisis Estático?</strong> Es un método de control de calidad donde evaluamos el código fuente o los archivos de configuración <strong>sin necesidad de ejecutarlos</strong>.</li>
+            <li><strong>¿Por qué lo aplicamos?</strong>
+                <br>&bull; <strong>Prevención temprana:</strong> Detecta fallas en el diseño de infraestructura antes de desplegar.
+                <br>&bull; <strong>Seguro:</strong> No requiere levantar contenedores reales (cero riesgo de ejecutar malware).
+                <br>&bull; <strong>Eficiente:</strong> Se ejecuta en milisegundos y consume muy pocos recursos.
+            </li>
+        </ul>
+        <div class="script-content">
+            <p>"Como este proyecto corresponde al área de **Calidad y Pruebas de Software**, el enfoque principal que utilizamos es el **Análisis Estático**."</p>
+            <p>"El análisis estático consiste en examinar la calidad y seguridad de un archivo leyendo su texto plano, *sin necesidad de ejecutar la aplicación ni correr los contenedores*. Esto funciona igual que un corrector gramatical de texto: busca patrones de malas prácticas y nos alerta inmediatamente, permitiendo corregir errores de configuración de manera veloz, segura y con un costo mínimo."</p>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 3: El Problema de Calidad -->
+    <div class="slide-data" data-title="Problemas de Calidad de Configuración" data-icon="fa-circle-exclamation">
+        <ul class="slide-bullets">
+            <li><strong>Fuga de Contraseñas:</strong> Escribir credenciales reales en texto plano en archivos `.env` o en código duro de contenedores.</li>
+            <li><strong>Sobreprivilegios (Falta de Aislamiento):</strong> Contenedores configurados como superusuario o root, aumentando el impacto ante un hackeo.</li>
+            <li><strong>Carencia de Límites de Recursos:</strong> No definir límites de uso de Memoria y CPU en el servidor real.</li>
+        </ul>
+        <div class="script-content">
+            <p>"¿Cuáles son los **defectos de calidad de configuración** que buscamos corregir?"</p>
+            <p>"El primero es la fuga de información confidencial, que ocurre cuando se escriben contraseñas reales en texto plano en los archivos. El segundo es la falta de aislamiento, donde el contenedor corre con permisos de administrador en la máquina física real. Y el tercero es no limitar los recursos de memoria y procesador, lo que podría provocar que un contenedor sature y tumbe el servidor completo."</p>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 4: Demostración del Panel de Carga (Captura 1) -->
+    <div class="slide-data" data-title="Interfaz: Carga de Archivos" data-icon="fa-cloud-arrow-up">
+        <div class="capture-box">
+            <img src="media/captura_dashboard.png" class="real-capture" onerror="this.style.display='none'; document.getElementById('backMockup1').style.display='block';" alt="Panel de Carga">
+            <div id="backMockup1" class="mockup-dashboard" style="display:none;">
+                <div class="mockup-header"><strong>ASC | Panel de Carga</strong><span>Listo</span></div>
+                <div class="mockup-dropzone" style="min-height: 110px;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:20px; color:#2563eb; margin-bottom:5px;"></i>
+                    <p>Arrastra tus archivos de configuración aquí</p>
+                    <small>Dockerfile, Compose, Kubernetes o .env</small>
+                </div>
+            </div>
+        </div>
+        <ul class="slide-bullets" style="margin-top: 15px;">
+            <li><strong>Arrastrar y Soltar:</strong> Permite subir varios archivos al mismo tiempo para su análisis inmediato.</li>
+            <li><strong>Validación Rápida:</strong> Comprueba el formato de extensión y descarta archivos que pesen más de 2 MB para proteger la memoria del servidor.</li>
+        </ul>
+        <div class="script-content">
+            <p>"En esta diapositiva vemos la **pantalla principal de carga de nuestra aplicación**."</p>
+            <p>"Diseñamos una zona intuitiva donde el usuario puede arrastrar múltiples archivos al mismo tiempo. Nuestro Javascript valida que los archivos tengan extensiones válidas y no superen los 2 megabytes de peso, mostrando una lista ordenada antes de realizar el escaneo."</p>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 5: Visualización de Resultados (Captura 2) -->
+    <div class="slide-data" data-title="Calificación y Reporte de Fallas" data-icon="fa-list-check">
+        <div class="capture-box">
+            <img src="media/captura_resultados.png" class="real-capture" onerror="this.style.display='none'; document.getElementById('backMockup2').style.display='block';" alt="Resultados del Análisis">
+            <div id="backMockup2" class="mockup-dashboard" style="display:none;">
+                <div class="mockup-header"><strong>Resultados: Dockerfile</strong><span style="color:#dc2626; font-weight:bold;">Score: 46/100</span></div>
+                <div class="mockup-finding"><strong>CRÍTICO [DOCKERFILE_001]</strong> - El contenedor se ejecuta como root.</div>
+                <div class="mockup-finding" style="border-left-color:#ea580c; background:rgba(234,88,12,0.05);"><strong>ALTO [DOCKERFILE_002]</strong> - Puerto SSH 22 expuesto.</div>
+            </div>
+        </div>
+        <ul class="slide-bullets" style="margin-top: 15px;">
+            <li><strong>Calificación (Score de 0 a 100):</strong> Inicia en 100 y va restando puntos de calidad según la severidad de las fallas:
+                <br>&bull; <strong>Crítico:</strong> -25 puntos | &bull; <strong>Alto:</strong> -15 puntos | &bull; <strong>Medio:</strong> -7 puntos | &bull; <strong>Bajo:</strong> -2 puntos
+            </li>
+            <li><strong>Guía de Corrección:</strong> Explica el motivo de la falla y muestra cómo solucionarlo.</li>
+        </ul>
+        <div class="script-content">
+            <p>"Una vez cargado el archivo, la pantalla de resultados nos muestra la **calificación de calidad y seguridad**."</p>
+            <p>"La nota va del 0 al 100 y nos muestra un semáforo de colores para identificar rápido las fallas. Lo más importante de esta pantalla es que, además de alertarnos, nos da una recomendación clara de qué línea de código debemos cambiar o añadir para solucionar el problema."</p>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 6: Enmascarar Contraseñas (Sanitización) -->
+    <div class="slide-data" data-title="Privacidad de Datos (Sanitización)" data-icon="fa-eye-slash">
+        <div class="sanitizer-sim">
+            <div class="sim-input-group">
+                <input type="text" class="sim-input" id="simInput" value="DB_PASSWORD=contrasenaReal123">
+                <button class="sim-btn" onclick="runSanitizerSim()">Procesar</button>
+            </div>
+            <div class="sim-output" id="simOutput">Haz clic en 'Procesar' para enmascarar la contraseña.</div>
+        </div>
+        <ul class="slide-bullets" style="margin-top: 12px;">
+            <li><strong>¿Qué es la Sanitización?</strong> Es una medida de calidad de datos para **ocultar contraseñas reales** detectadas en los archivos analizados.</li>
+            <li><strong>Funcionamiento:</strong> El sistema detecta variables sospechosas (ej. passwords, api keys, db links) y las reemplaza por asteriscos (`********`).</li>
+            <li><strong>Seguridad:</strong> Garantiza que ninguna credencial real quede guardada en el historial ni se imprima en los reportes descargables.</li>
+        </ul>
+        <div class="script-content">
+            <p>"Un aspecto fundamental para la calidad de datos de la aplicación es la **Sanitización o Enmascaramiento de Contraseñas**."</p>
+            <p>"Si un desarrollador sube un archivo que contiene una contraseña real, sería un riesgo crítico que nuestro programa almacene esa contraseña en texto plano en sus registros. Por ello, el servidor escanea el contenido y, si detecta una clave, la reemplaza automáticamente por asteriscos en la pantalla y en el reporte. En la diapositiva podemos ver una demostración en vivo de cómo funciona esta limpieza."</p>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 7: Exportación de Archivos (Reportes) -->
+    <div class="slide-data" data-title="Exportación de Reportes de Calidad" data-icon="fa-file-export">
+        <ul class="slide-bullets">
+            <li><strong>Reporte HTML:</strong> Genera un archivo interactivo, responsivo y con estilos integrados para compartir el resultado del análisis por correo.</li>
+            <li><strong>Formato SARIF (JSON estructurado):</strong> Formato estándar de la industria que permite integrar nuestros análisis de calidad en plataformas en la nube.</li>
+            <li><strong>JSON Nativo:</strong> Formato estructurado crudo para integraciones o almacenamiento secundario.</li>
+        </ul>
+        <div class="script-content">
+            <p>"Una vez realizado el análisis, el usuario tiene la opción de **Exportar el Reporte de Calidad** en tres formatos diferentes según sus necesidades."</p>
+            <p>"El primero es un **HTML autocontenido**, ideal para compartir por correo o imprimir en PDF. El segundo es el formato **SARIF**, que es el estándar de la industria compatible con plataformas como GitHub o Azure DevOps para bloquear de forma automática cambios inseguros. Y el tercero es un **JSON estructurado** para integraciones directas."</p>
+        </div>
+    </div>
+
+    <!-- DIAPOSITIVA 8: Historial de Calidad (Captura 3) -->
+    <div class="slide-data" data-title="Historial de Auditoría" data-icon="fa-clock-rotate-left">
+        <div class="capture-box">
+            <img src="media/captura_historial.png" class="real-capture" onerror="this.style.display='none'; document.getElementById('backMockup3').style.display='block';" alt="Historial de Auditoría">
+            <div id="backMockup3" class="mockup-dashboard" style="display:none; padding:10px;">
+                <div class="mockup-header" style="border-bottom:0;"><strong><i class="fa-solid fa-clock-rotate-left"></i> Historial de Análisis</strong></div>
+                <div style="background:rgba(255,255,255,0.02); padding:6px; border-radius:4px; margin-top:4px; display:flex; justify-content:space-between;">
+                    <span>Dockerfile (Gustavo Sagua)</span>
+                    <span style="color:#ea580c; font-weight:bold;">46/100</span>
+                </div>
+            </div>
+        </div>
+        <ul class="slide-bullets" style="margin-top: 15px;">
+            <li><strong>Persistencia Liviana:</strong> Los análisis realizados se guardan localmente en un archivo de texto en el servidor (`history.json`).</li>
+            <li><strong>Recuperación Rápida:</strong> Permite consultar escaneos anteriores en caliente sin necesidad de volver a subir el archivo.</li>
+        </ul>
+        <div class="script-content">
+            <p>"Por último, el sistema cuenta con un **Historial de Auditoría** y opciones de descarga."</p>
+            <p>"El historial nos permite recuperar los análisis anteriores con un solo clic directamente desde el servidor. Con esto concluyo la exposición de mi sistema de seguridad de contenedores. Quedo a la espera de sus preguntas, ingeniero. Muchas gracias."</p>
+        </div>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT DE NAVEGACIÓN -->
+    <script>
+        const slides = [];
+        const slideDataElements = document.querySelectorAll('.slide-data');
+        
+        slideDataElements.forEach((el, index) => {
+            slides.push({
+                title: el.getAttribute('data-title'),
+                icon: el.getAttribute('data-icon'),
+                htmlContent: el.innerHTML,
+                scriptHtml: el.querySelector('.script-content').innerHTML
+            });
+        });
+
+        let currentSlide = 0;
+
+        const slideScreen = document.getElementById('slideScreen');
+        const scriptText = document.getElementById('scriptText');
+        const counter = document.getElementById('counter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateSlide() {
+            const slide = slides[currentSlide];
+            
+            slideScreen.innerHTML = `
+                <div class="slide-title">
+                    <i class="fa-solid ${slide.icon}"></i>
+                    <span>${slide.title}</span>
+                </div>
+                ${slide.htmlContent}
+            `;
+            const scriptInScreen = slideScreen.querySelector('.script-content');
+            if (scriptInScreen) scriptInScreen.remove();
+
+            scriptText.innerHTML = slide.scriptHtml;
+
+            counter.innerText = `${currentSlide + 1} / ${slides.length}`;
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlide();
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide();
+                }
+            }
+        });
+
+        // Simulador de Sanitización
+        window.runSanitizerSim = function() {
+            const val = document.getElementById('simInput').value;
+            const outputEl = document.getElementById('simOutput');
+            
+            const SENSITIVE_ASSIGNMENT_RE = /\b(password|passwd|pwd|secret|token|api[_-]?key|apikey|aws_access_key|aws_secret|private[_-]?key|ssh[_-]?key|database[_-]?url|db[_-]?pass|connection[_-]?string)([^'\"\s,;]*\s*[:=]\s*)(['\"]?)([^'\"\s,;]+)/i;
+            
+            let result = val;
+            if (SENSITIVE_ASSIGNMENT_RE.test(val)) {
+                result = val.replace(SENSITIVE_ASSIGNMENT_RE, (match, p1, p2, p3, p4) => {
+                    return `${p1}${p2}${p3}********`;
+                });
+            } else {
+                if (val.indexOf('=') !== -1) {
+                    result = val.substring(0, val.indexOf('=') + 1) + "********";
+                } else {
+                    result = "********";
+                }
+            }
+            
+            outputEl.innerHTML = `<strong>Enmascarado:</strong> <span style="color:#10b981;">${result}</span>`;
+        };
+
+        updateSlide();
+    </script>
+</body>
+</html>

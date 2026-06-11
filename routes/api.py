@@ -14,7 +14,6 @@ from services.report_service import (
     generate_json_report,
     generate_sarif_report,
 )
-from services.auth_service import require_api_token
 from services.sanitization_service import sanitize_result
 from services import history_service
 
@@ -35,7 +34,6 @@ ANALYZERS = {
 
 
 @api_bp.route("/analyze", methods=["POST"])
-@require_api_token
 def analyze():
     """
     Accept one or more uploaded files, analyze each, and return a JSON
@@ -109,13 +107,11 @@ def analyze():
 
 
 @api_bp.route("/history", methods=["GET"])
-@require_api_token
 def history():
     """Return the persistent analysis history summary (newest first)."""
     return jsonify(history_service.get_history_summary()), 200
 
 @api_bp.route("/history/<entry_id>", methods=["GET"])
-@require_api_token
 def history_detail(entry_id):
     """Return a full analysis entry by its ID."""
     entry = history_service.get_entry_by_id(entry_id)
@@ -125,7 +121,6 @@ def history_detail(entry_id):
 
 
 @api_bp.route("/history", methods=["DELETE"])
-@require_api_token
 def clear_history():
     """Clear the persistent analysis history."""
     history_service.clear_history()
@@ -133,7 +128,6 @@ def clear_history():
 
 
 @api_bp.route("/export", methods=["POST"])
-@require_api_token
 def export_report():
     """
     Accept a JSON analysis result and return a standalone HTML report

@@ -44,10 +44,9 @@
                     <h1>Analizador de Seguridad de Contenedores</h1>
                 </div>
                 <div class="topbar-actions">
-                    <div class="token-control">
-                        <i class="fa-solid fa-key"></i>
-                        <input id="apiTokenInput" type="password" placeholder="Token API opcional" autocomplete="off">
-                    </div>
+                    <button class="icon-button" type="button" data-bs-toggle="modal" data-bs-target="#qaModal" title="Controles de Calidad y Pruebas de Software">
+                        <i class="fa-solid fa-award"></i>
+                    </button>
                     <a class="icon-button" href="https://github.com/alonso190201/proyecto-si784-2026-i-u1-analizador_de_seguridad_de_contenedores" target="_blank" rel="noreferrer" title="Repositorio">
                         <i class="fa-brands fa-github"></i>
                     </a>
@@ -84,6 +83,61 @@
         </div>
     </div>
 
+    <!-- Modal de Aseguramiento de Calidad (QA) -->
+    <div class="modal fade" id="qaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow mb-1">Aseguramiento de Calidad (QA)</p>
+                        <h5 class="modal-title text-dark">Controles de Calidad y Seguridad de Software</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4 text-dark">
+                    <div class="mb-3">
+                        <p class="text-secondary">Este sistema integra múltiples mecanismos y atributos de calidad de acuerdo con los estándares del curso <strong>Calidad y Pruebas de Software</strong>:</p>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card h-100 border border-light-subtle bg-light p-3">
+                                <h6 class="text-primary d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                                    Análisis Estático
+                                </h6>
+                                <p class="small text-secondary mb-0">El sistema realiza <strong>pruebas estáticas automatizadas</strong> sobre los archivos de configuración subidos. Escanea reglas predefinidas en el backend sin necesidad de ejecutar los contenedores, minimizando riesgos de forma temprana.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card h-100 border border-light-subtle bg-light p-3">
+                                <h6 class="text-warning d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-eye-slash"></i>
+                                    Sanitización (Privacidad)
+                                </h6>
+                                <p class="small text-secondary mb-0">Para salvaguardar la <strong>confidencialidad de la información</strong>, el backend enmascara automáticamente contraseñas, secretos y tokens detectados reemplazándolos con asteriscos (<code>********</code>) antes de registrarlos o mostrarlos.</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100 border border-light-subtle bg-light p-3">
+                                <h6 class="text-success d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-file-export"></i>
+                                    Exportación
+                                </h6>
+                                <p class="small text-secondary mb-0">Permite descargar reportes en formatos adaptables a distintos criterios: <strong>HTML interactivo</strong> para auditorías rápidas y <strong>SARIF (JSON estándar)</strong> para portabilidad e integración.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="appToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true">
             <div class="d-flex">
@@ -97,10 +151,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         window.getApiHeaders = function(extra) {
-            const headers = Object.assign({}, extra || {});
-            const token = localStorage.getItem('asc_api_token') || '';
-            if (token) headers['X-API-Token'] = token;
-            return headers;
+            return Object.assign({}, extra || {});
         };
         window.showToast = function(message, tone) {
             const toastEl = document.getElementById('appToast');
@@ -109,14 +160,6 @@
             toastEl.className = `toast align-items-center border-0 text-bg-${tone || 'dark'}`;
             bootstrap.Toast.getOrCreateInstance(toastEl).show();
         };
-        document.addEventListener('DOMContentLoaded', () => {
-            const tokenInput = document.getElementById('apiTokenInput');
-            tokenInput.value = localStorage.getItem('asc_api_token') || '';
-            tokenInput.addEventListener('change', () => {
-                localStorage.setItem('asc_api_token', tokenInput.value.trim());
-                window.showToast('Token actualizado.', 'success');
-            });
-        });
     </script>
     {% block scripts %}{% endblock %}
 </body>
