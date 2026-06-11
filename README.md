@@ -1,33 +1,42 @@
-# Container Security Analyzer
+# Container Security Analyzer 🛡️
 
-Analizador estatico de seguridad para archivos de configuracion de contenedores. Detecta malas practicas en `Dockerfile`, `docker-compose.yml`, manifiestos Kubernetes y archivos `.env`.
+A professional, modular static analysis tool built with Python Flask to detect vulnerabilities, misconfigurations, and security anti-patterns in container configuration files.
 
-La aplicacion no ejecuta contenedores. El analisis es estatico.
+**Important:** This application performs *static analysis only*. It does not execute containers or perform active penetration testing.
 
-## Funcionalidades
+## Features
 
-- Analisis web con carga multiple de archivos.
-- Motor modular por tipo de archivo.
-- Deteccion de secretos con redaccion automatica antes de responder, guardar o exportar.
-- Historial local en `history.json`, sin base de datos.
-- Exportacion de reportes en HTML, JSON y SARIF.
-- CLI para escanear archivos, carpetas o repositorios completos.
-- Scoring de seguridad de 0 a 100 con grado A-F y explicacion de penalizacion.
-- Referencias a controles como CIS Docker, Kubernetes Pod Security Standards, OWASP Secrets Management y NSA/CISA Kubernetes.
-- Token API opcional para despliegues productivos.
+- **Multi-Format Support:** Analyzes `Dockerfile`, `docker-compose.yml`, Kubernetes manifests (`.yaml`), and `.env` files.
+- **Rule Engine:** Modular analyzers with specific rules for secrets detection, privilege escalation, network exposure, and supply-chain risks.
+- **Modern Dashboard:** Cyber-security themed dark UI with glassmorphism effects, drag-and-drop upload, and animated charts.
+- **Scoring System:** Calculates a security score (0-100) and assigns a grade (A-F) based on finding severity.
+- **Reporting:** Export detailed, self-contained HTML reports.
+- **Privacy:** In-memory history only (no database required).
 
-## Instalacion
+## Architecture
 
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
-flask run
-```
+- **Backend:** Python 3.12, Flask, Werkzeug
+- **Frontend:** HTML5, Bootstrap 5, Vanilla JS, Chart.js, FontAwesome
+- **Deployment:** Ready for Azure App Service Linux (includes `Procfile`, `startup.sh`, and GitHub Actions workflow).
 
-En Linux/macOS:
+## Installation
 
+1. **Clone the repository** (or download the files).
+2. **Create a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Environment Variables:**
+   Rename `.env.example` to `.env` and configure your settings.
+
+## Usage
+
+Run the application locally:
 ```bash
 python -m venv venv
 source venv/bin/activate
@@ -35,73 +44,27 @@ pip install -r requirements.txt
 cp .env.example .env
 flask run
 ```
-
-Abre `http://127.0.0.1:5000`.
-
-## Configuracion
-
-Variables relevantes:
-
-```env
-SECRET_KEY=change-this-in-production-immediately
-APP_AUTH_TOKEN=
-MAX_CONTENT_LENGTH=16777216
-HISTORY_MAX_SIZE=50
-HISTORY_FILE=history.json
-STORE_FULL_HISTORY=true
-```
-
-Si `APP_AUTH_TOKEN` tiene valor, las rutas `/api/*` requieren `X-API-Token: <token>` o `Authorization: Bearer <token>`. El frontend incluye un campo para guardar ese token en `localStorage`.
-
-`STORE_FULL_HISTORY=true` guarda hallazgos completos pero sanitizados. Si lo cambias a `false`, el historial conserva solo resumen y metadatos.
-
-## Uso CLI
-
-Escanear el repositorio actual:
-
+Or with Gunicorn:
 ```bash
-python scan.py .
+gunicorn app:app --bind=0.0.0.0:8000
 ```
 
-Generar JSON:
+Navigate to `http://127.0.0.1:5000` (or 8000) in your browser. Drag and drop your configuration files into the drop zone and click "Start Analysis".
 
-```bash
-python scan.py . --format json --output report.json
-```
+## Rule Categories
 
-Generar SARIF para CI:
+- **Privilege Escalation:** Detects `privileged: true`, `USER root`, `hostPID`, etc.
+- **Network Security:** Detects `hostNetwork`, dangerous exposed ports (22, 2375, 3389).
+- **Secrets Management:** Regex-based detection for hardcoded API keys, tokens, and passwords in `ENV`, `ARG`, `.env` files, and ConfigMaps.
+- **Supply Chain:** Detects unpinned image tags (`latest`), unofficial base images, and unsafe remote script execution (`curl | bash`).
+- **Resource Constraints:** Flags missing memory/CPU limits.
 
-```bash
-python scan.py . --format sarif --output results.sarif
-```
+## Deployment to Azure App Service
 
-Fallar el pipeline si hay hallazgos altos o criticos:
+This repository includes a GitHub Actions workflow `.github/workflows/azure-deploy.yml`.
 
-```bash
-python scan.py . --fail-on high
-```
-
-## Pruebas
-
-```bash
-python -m pytest
-```
-
-## Reglas principales
-
-- Privilegios: `USER root`, `privileged:true`, `hostPID`, `hostNetwork`, `allowPrivilegeEscalation`, capacidades peligrosas.
-- Red: puertos peligrosos, `network_mode: host`, servicios Kubernetes `NodePort` o `LoadBalancer`.
-- Secretos: valores sensibles en `.env`, `ENV`, `ARG`, `RUN`, `environment` y ConfigMaps.
-- Supply chain: imagenes sin tag fijo, `latest`, `curl | bash`, upgrades no reproducibles.
-- Hardening: `read_only`, `no-new-privileges`, `cap_drop: ALL`, `seccompProfile`, token de ServiceAccount automontado.
-- Recursos: limites de memoria y CPU ausentes.
-
-## Despliegue en Azure App Service
-
-El workflow incluido despliega a un App Service existente usando publish profile.
-
-1. Crea el App Service Linux con Python 3.12.
-2. Descarga el publish profile desde Azure Portal.
-3. Agrega el secreto `AZURE_WEBAPP_PUBLISH_PROFILE` en GitHub Actions.
-4. Configura en Azure las variables `SECRET_KEY`, `FLASK_ENV=production` y, opcionalmente, `APP_AUTH_TOKEN`.
-5. Haz push a `main` o ejecuta el workflow manualmente.
+1. Create a Web App in Azure App Service (Linux, Python 3.12).
+2. Download the Publish Profile from the Azure Portal.
+3. In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
+4. Add a repository secret named `AZURE_WEBAPP_PUBLISH_PROFILE` and paste the publish profile XML content.
+5. Push to the `main` branch to trigger deployment.
